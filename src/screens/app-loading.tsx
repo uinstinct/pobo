@@ -14,7 +14,7 @@ export default function AppLoading({ children }: PropsWithChildren) {
     loadLocaleAsync(locale).then(() => setLocalesLoaded(true));
   }, [locale]);
 
-  return !localesLoaded ? (
+  return localesLoaded ? (
     <div className={`h-screen flex justify-center items-center`}>
       <Progress value={50} className={`w-3/4`} />
     </div>
