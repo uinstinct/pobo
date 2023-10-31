@@ -20,12 +20,15 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "notification": {
+        "all": true
       }
     },
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.pobo.main",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

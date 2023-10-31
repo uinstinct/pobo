@@ -3,39 +3,22 @@
 
 use std::time::Duration;
 
-use tauri::{CustomMenuItem, SystemTray, SystemTrayMenu, SystemTrayMenuItem};
-use tokio::time::{self, Instant};
-
-const TIME_LEFT_EVENT: &str = "time_left";
+use tauri::api::notification::Notification;
+use tokio::time::sleep;
 
 #[tauri::command]
-async fn start_timer(window: tauri::Window) {
+async fn start_timer(app_handle: tauri::AppHandle, timer_seconds: u64) {
     println!("starting the timer");
-    let mut interval = time::interval(Duration::from_secs(1));
-    let earlier = Instant::now();
-    loop {
-        let instant = interval.tick().await;
-        window
-            .emit(
-                &TIME_LEFT_EVENT,
-                format!("{} have elapsed", instant.duration_since(earlier).as_secs()),
-            )
-            .unwrap();
-    }
+
+    sleep(Duration::from_secs(timer_seconds)).await;
+
+    let _ = Notification::new(&app_handle.config().tauri.bundle.identifier)
+        .title("Timer Complete")
+        .body("The timer has completed")
+        .show();
 }
 
 fn main() {
-    // let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    // let hide = CustomMenuItem::new("hide".to_string(), "Hide");
-    // let tray_menu = SystemTrayMenu::new()
-    //     .add_item(quit)
-    //     .add_native_item(SystemTrayMenuItem::Separator)
-    //     .add_item(hide);
-
-    // let tray = SystemTray::new().with_menu(tray_menu);
-
-    // tauri::async_runtime::set(tokio::runtime::Handle::current());
-
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![start_timer])
         // .system_tray(tray)
