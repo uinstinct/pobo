@@ -6,6 +6,8 @@ use std::time::Duration;
 use tauri::api::notification::Notification;
 use tokio::time::sleep;
 
+mod tray_menu;
+
 #[tauri::command]
 async fn start_timer(app_handle: tauri::AppHandle, timer_seconds: u64) {
     println!("starting the timer");
@@ -20,8 +22,16 @@ async fn start_timer(app_handle: tauri::AppHandle, timer_seconds: u64) {
 
 fn main() {
     tauri::Builder::default()
+        .system_tray(tray_menu::get_tray_menu())
+        .on_system_tray_event(tray_menu::handle_system_tray_event)
         .invoke_handler(tauri::generate_handler![start_timer])
-        // .system_tray(tray)
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app_handle, event| match event {
+            tauri::RunEvent::ExitRequested { api, .. } => {
+                println!("exiting tauri application");
+                api.prevent_exit();
+            }
+            _ => {}
+        });
 }
