@@ -25,6 +25,10 @@ fn main() {
         .system_tray(tray_menu::get_tray_menu())
         .on_system_tray_event(tray_menu::handle_system_tray_event)
         .invoke_handler(tauri::generate_handler![start_timer])
+        .setup(|app| {
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            Ok(())
+        })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_app_handle, event| match event {
