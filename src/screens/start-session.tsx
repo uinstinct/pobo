@@ -2,6 +2,7 @@ import Timer from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18nContext } from "@/i18n/i18n-react";
+import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef, useState } from "react";
 
 function TimerInput({
@@ -57,17 +58,25 @@ export default function StartSession() {
   const [showTimer, setShowTimer] = useState(false);
   const { LL } = useI18nContext();
 
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined
   );
 
   const handleStartTimer = () => {
     if (!totalSecs) return;
-    // invoke("start_timer", { timerSeconds: 10 });
+    invoke("start_timer", { timerSeconds: totalSecs });
     setShowTimer(true);
+
     intervalRef.current = setInterval(() => {
       setCurrentSecs((prevCurrentSecs) => prevCurrentSecs + 1);
     }, 1_000);
+    timeoutRef.current = setTimeout(
+      () => clearInterval(intervalRef.current),
+      totalSecs
+    );
   };
 
   useEffect(() => {
