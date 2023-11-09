@@ -2,6 +2,7 @@ import Timer from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18nContext } from "@/i18n/i18n-react";
+import { UnlistenFn, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef, useState } from "react";
 
@@ -92,6 +93,16 @@ export default function StartSession() {
       );
     }, 1_000);
   };
+
+  useEffect(() => {
+    let unlisten: UnlistenFn = () => {};
+    listen("resync_timer", (event) => {
+      if (showTimer) {
+        setCurrentSecs(+(event.payload as string));
+      }
+    }).then((unlistenFn) => (unlisten = unlistenFn));
+    return unlisten;
+  }, [showTimer]);
 
   useEffect(() => {
     return clearLocalInterval;

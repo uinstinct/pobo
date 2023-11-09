@@ -1,7 +1,6 @@
-use std::time::Duration;
-use tokio::time::Instant;
+use tokio::time::{interval as tokio_interval, Duration, Instant};
 
-use tauri::{api::notification::Notification, AppHandle};
+use tauri::{api::notification::Notification, AppHandle, Manager};
 
 #[tauri::command]
 pub async fn start_timer(app_handle: AppHandle, timer_seconds: u64) -> bool {
@@ -11,10 +10,21 @@ pub async fn start_timer(app_handle: AppHandle, timer_seconds: u64) -> bool {
 
     let timer_duration = Duration::from_secs(timer_seconds);
 
-    // TODO: can change this to tokio set interval
+    let mut interval = tokio_interval(Duration::from_secs(1));
+    let mut last_resync_timer_instant = start_instant.clone();
+
     loop {
+        interval.tick().await;
+
         if start_instant.elapsed() > timer_duration {
             break;
+        }
+
+        if last_resync_timer_instant.elapsed() >= Duration::from_secs(60) {
+            app_handle
+                .emit_all("resync_timer", start_instant.elapsed().as_secs())
+                .unwrap();
+            last_resync_timer_instant = Instant::now();
         }
     }
 
