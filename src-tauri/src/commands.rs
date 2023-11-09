@@ -11,6 +11,7 @@ pub async fn start_timer(app_handle: AppHandle, timer_seconds: u64) -> bool {
 
     let timer_duration = Duration::from_secs(timer_seconds);
 
+    // TODO: can change this to tokio set interval
     loop {
         if start_instant.elapsed() > timer_duration {
             break;

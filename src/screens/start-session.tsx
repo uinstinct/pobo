@@ -10,20 +10,24 @@ function TimerInput({
 }: {
   onTimeChange: (seconds: number) => void;
 }) {
-  const [hours, setHours] = useState<number | undefined>(undefined);
-  const [minutes, setMinutes] = useState<number | undefined>(undefined);
-  const [seconds, setSeconds] = useState<number | undefined>(undefined);
+  const [hours, setHours] = useState<string>("");
+  const [minutes, setMinutes] = useState<string>("");
+  const [seconds, setSeconds] = useState<string>("");
 
-  const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTimeChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    prevTimeUnit: string
+  ) => {
     const value = event.target.value.trim();
-    if (isNaN(value as any)) return 0;
-    return +value;
+    if (isNaN(value as any)) return prevTimeUnit;
+    else if (+value >= 60) return prevTimeUnit;
+    return value;
   };
 
   useEffect(() => {
     if (hours || minutes || seconds) {
       onTimeChange(
-        (hours || 0) * 60 * 60 + (minutes || 0) * 60 + (seconds || 0)
+        (+hours || 0) * 60 * 60 + (+minutes || 0) * 60 + (+seconds || 0)
       );
     }
   }, [hours, minutes, seconds]);
@@ -31,22 +35,25 @@ function TimerInput({
   return (
     <div className="mt-6 grid grid-cols-3 gap-2">
       <Input
-        type="number"
         placeholder="Hours"
         value={hours}
-        onChange={(event) => setHours(handleTimeChange(event))}
+        onChange={(event) =>
+          setHours((prevHours) => handleTimeChange(event, prevHours))
+        }
       />
       <Input
-        type="number"
         placeholder="Minutes"
         value={minutes}
-        onChange={(event) => setMinutes(handleTimeChange(event))}
+        onChange={(event) =>
+          setMinutes((prevMinutes) => handleTimeChange(event, prevMinutes))
+        }
       />
       <Input
-        type="number"
         placeholder="Seconds"
         value={seconds}
-        onChange={(event) => setSeconds(handleTimeChange(event))}
+        onChange={(event) =>
+          setSeconds((prevSeconds) => handleTimeChange(event, prevSeconds))
+        }
       />
     </div>
   );
@@ -76,14 +83,6 @@ export default function StartSession() {
          * although this should not happen, it will act as a fallback
          */
         (prevCurrentSecs) => {
-          console.log(
-            "the mode was",
-            import.meta.env.MODE,
-            "and prod was",
-            import.meta.env.PROD,
-            "and dev was",
-            import.meta.env.DEV
-          );
           if (import.meta.env.PROD && prevCurrentSecs + 1 > totalSecs) {
             clearLocalInterval();
             return prevCurrentSecs;
