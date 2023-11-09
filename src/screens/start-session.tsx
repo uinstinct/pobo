@@ -58,29 +58,44 @@ export default function StartSession() {
   const [showTimer, setShowTimer] = useState(false);
   const { LL } = useI18nContext();
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined
-  );
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined
   );
+  const clearLocalInterval = () => clearInterval(intervalRef.current);
 
   const handleStartTimer = () => {
     if (!totalSecs) return;
-    invoke("start_timer", { timerSeconds: totalSecs });
+    invoke("start_timer", { timerSeconds: totalSecs }).then(clearLocalInterval);
+
     setShowTimer(true);
 
     intervalRef.current = setInterval(() => {
-      setCurrentSecs((prevCurrentSecs) => prevCurrentSecs + 1);
+      setCurrentSecs(
+        /**
+         * clear the interval if the seconds have elapsed
+         * although this should not happen, it will act as a fallback
+         */
+        (prevCurrentSecs) => {
+          console.log(
+            "the mode was",
+            import.meta.env.MODE,
+            "and prod was",
+            import.meta.env.PROD,
+            "and dev was",
+            import.meta.env.DEV
+          );
+          if (import.meta.env.PROD && prevCurrentSecs + 1 > totalSecs) {
+            clearLocalInterval();
+            return prevCurrentSecs;
+          }
+          return prevCurrentSecs + 1;
+        }
+      );
     }, 1_000);
-    timeoutRef.current = setTimeout(
-      () => clearInterval(intervalRef.current),
-      totalSecs
-    );
   };
 
   useEffect(() => {
-    return () => clearInterval(intervalRef.current);
+    return clearLocalInterval;
   }, [intervalRef]);
 
   return (
