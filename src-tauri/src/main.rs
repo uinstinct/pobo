@@ -2,10 +2,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod state;
 mod tray_menu;
 
 fn main() {
     tauri::Builder::default()
+        .manage(state::get_managed_timer_state())
         .system_tray(tray_menu::get_tray_menu())
         .on_system_tray_event(tray_menu::handle_system_tray_event)
         .invoke_handler(tauri::generate_handler![commands::start_timer])
