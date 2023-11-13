@@ -7,10 +7,13 @@ mod tray_menu;
 
 fn main() {
     tauri::Builder::default()
-        .manage(state::get_managed_timer_state())
+        .manage(state::TimerState::new())
         .system_tray(tray_menu::get_tray_menu())
         .on_system_tray_event(tray_menu::handle_system_tray_event)
-        .invoke_handler(tauri::generate_handler![commands::start_timer])
+        .invoke_handler(tauri::generate_handler![
+            commands::start_timer,
+            commands::resync_timer
+        ])
         .setup(|app| {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             Ok(())

@@ -3,10 +3,14 @@ use tokio::time::Instant;
 
 pub struct TimerState {
     pub start_instant: Mutex<Option<Instant>>,
+    pub timer_seconds: Mutex<Option<u64>>,
 }
 
-pub fn get_managed_timer_state() -> TimerState {
-    TimerState {
-        start_instant: Mutex::new(None),
+impl TimerState {
+    pub fn new() -> Self {
+        TimerState {
+            start_instant: Mutex::new(None),
+            timer_seconds: Mutex::new(None),
+        }
     }
 }

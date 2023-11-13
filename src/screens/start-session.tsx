@@ -2,7 +2,6 @@ import Timer from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18nContext } from "@/i18n/i18n-react";
-import { UnlistenFn, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef, useState } from "react";
 
@@ -71,10 +70,7 @@ export default function StartSession() {
   );
   const clearLocalInterval = () => clearInterval(intervalRef.current);
 
-  const handleStartTimer = () => {
-    if (!totalSecs) return;
-    invoke("start_timer", { timerSeconds: totalSecs }).then(clearLocalInterval);
-
+  const startTimerInterval = () => {
     setShowTimer(true);
 
     intervalRef.current = setInterval(() => {
@@ -84,7 +80,7 @@ export default function StartSession() {
          * although this should not happen, it will act as a fallback
          */
         (prevCurrentSecs) => {
-          if (import.meta.env.PROD && prevCurrentSecs + 1 > totalSecs) {
+          if (import.meta.env.PROD && prevCurrentSecs + 1 > totalSecs!) {
             clearLocalInterval();
             return prevCurrentSecs;
           }
@@ -94,14 +90,25 @@ export default function StartSession() {
     }, 1_000);
   };
 
+  const handleStartTimer = () => {
+    if (!totalSecs) return;
+    invoke("start_timer", { timerSeconds: totalSecs }).then(clearLocalInterval);
+    startTimerInterval();
+  };
+
   useEffect(() => {
-    let unlisten: UnlistenFn = () => {};
-    listen("resync_timer", (event) => {
-      if (showTimer) {
-        setCurrentSecs(+(event.payload as string));
+    if (showTimer) return;
+
+    invoke<{ elapsed: number | null; timer_seconds: number | null }>(
+      "resync_timer"
+    ).then((payload) => {
+      console.log("the payload was", payload);
+      if (!showTimer && payload.elapsed && payload.timer_seconds) {
+        setTotalSecs(payload.timer_seconds);
+        setCurrentSecs(payload.elapsed);
+        startTimerInterval();
       }
-    }).then((unlistenFn) => (unlisten = unlistenFn));
-    return unlisten;
+    });
   }, [showTimer]);
 
   useEffect(() => {
