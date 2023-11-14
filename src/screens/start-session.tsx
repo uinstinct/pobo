@@ -2,6 +2,7 @@ import Timer from "@/components/timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18nContext } from "@/i18n/i18n-react";
+import { UnlistenFn, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef, useState } from "react";
 
@@ -68,10 +69,15 @@ export default function StartSession() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(
     undefined
   );
-  const clearLocalInterval = () => clearInterval(intervalRef.current);
+  const stopTimer = () => {
+    setShowTimer(false);
+    clearInterval(intervalRef.current);
+  };
 
   const startTimerInterval = () => {
     setShowTimer(true);
+
+    if (intervalRef.current) stopTimer();
 
     intervalRef.current = setInterval(() => {
       setCurrentSecs(
@@ -81,7 +87,7 @@ export default function StartSession() {
          */
         (prevCurrentSecs) => {
           if (import.meta.env.PROD && prevCurrentSecs + 1 > totalSecs!) {
-            clearLocalInterval();
+            stopTimer();
             return prevCurrentSecs;
           }
           return prevCurrentSecs + 1;
@@ -92,9 +98,19 @@ export default function StartSession() {
 
   const handleStartTimer = () => {
     if (!totalSecs) return;
-    invoke("start_timer", { timerSeconds: totalSecs }).then(clearLocalInterval);
+    invoke("start_timer", { timerSeconds: totalSecs }).then(() =>
+      console.log("starting the timer finished")
+    );
     startTimerInterval();
   };
+
+  useEffect(() => {
+    let unlisten: UnlistenFn = () => {};
+    listen("timer_finished", stopTimer).then(
+      (_unlistenFn) => (unlisten = _unlistenFn)
+    );
+    return unlisten;
+  }, []);
 
   useEffect(() => {
     if (showTimer) return;
@@ -110,10 +126,6 @@ export default function StartSession() {
       }
     });
   }, [showTimer]);
-
-  useEffect(() => {
-    return clearLocalInterval;
-  }, [intervalRef]);
 
   return (
     <div className="h-screen flex justify-center items-center">

@@ -1,12 +1,33 @@
 use tokio::time::{interval as tokio_interval, Duration, Instant};
 
-use tauri::{api::notification::Notification, AppHandle};
+use tauri::{api::notification::Notification, AppHandle, Manager};
 
 use crate::state::TimerState;
 
-/// store the starting instant in state, start the interval and send the notification when the duration is elapsed
-///
-/// drop the mutexes because it will not be released until the interval is over
+async fn notify_timer_finish(
+    app_handle: AppHandle,
+    start_instant: Instant,
+    timer_duration: Duration,
+) {
+    let mut interval = tokio_interval(Duration::from_secs(1));
+
+    loop {
+        interval.tick().await;
+
+        if start_instant.elapsed() > timer_duration {
+            break;
+        }
+    }
+
+    app_handle.emit_all("timer_finished", ()).unwrap();
+
+    println!("Sending Notification (notifications are not visible during dev mode)");
+    let _ = Notification::new(&app_handle.config().tauri.bundle.identifier)
+        .title("Timer Complete")
+        .body("The timer has completed")
+        .show();
+}
+
 #[tauri::command]
 pub async fn start_timer(
     timer_seconds: u64,
@@ -19,29 +40,22 @@ pub async fn start_timer(
 
     let mut start_instant_state = timer_state.start_instant.lock().await;
     *start_instant_state = Some(start_instant);
-    drop(start_instant_state);
 
     let mut timer_seconds_state = timer_state.timer_seconds.lock().await;
     *timer_seconds_state = Some(timer_seconds);
-    drop(timer_seconds_state);
 
-    let timer_duration = Duration::from_secs(timer_seconds);
+    let mut notify_timer_finish_task_state = timer_state.notify_timer_finish_task.lock().await;
 
-    let mut interval = tokio_interval(Duration::from_secs(1));
-
-    loop {
-        interval.tick().await;
-
-        if start_instant.elapsed() > timer_duration {
-            break;
-        }
+    if (*notify_timer_finish_task_state).is_some() {
+        (*notify_timer_finish_task_state).as_ref().unwrap().abort();
     }
 
-    println!("Sending Notification (notifications are not visible during dev mode)");
-    let _ = Notification::new(&app_handle.config().tauri.bundle.identifier)
-        .title("Timer Complete")
-        .body("The timer has completed")
-        .show();
+    let notify_timer_finish_task = tauri::async_runtime::spawn(notify_timer_finish(
+        app_handle,
+        start_instant,
+        Duration::from_secs(timer_seconds),
+    ));
+    *notify_timer_finish_task_state = Some(notify_timer_finish_task);
 
     Ok(())
 }
@@ -58,14 +72,20 @@ pub async fn resync_timer(
 ) -> Result<CurrentTimerState, ()> {
     println!("resyncing the timer");
 
-    let start_instant = timer_state.start_instant.lock().await;
-    let timer_seconds = timer_state.timer_seconds.lock().await;
+    let mut start_instant_state = timer_state.start_instant.lock().await;
+    let mut timer_seconds_state = timer_state.timer_seconds.lock().await;
 
-    if let Some(start_instant) = *start_instant {
-        return Ok(CurrentTimerState {
-            elapsed: Some(start_instant.elapsed().as_secs()),
-            timer_seconds: *timer_seconds,
-        });
+    if let (Some(start_instant), Some(timer_seconds)) = (*start_instant_state, *timer_seconds_state)
+    {
+        if start_instant.elapsed().as_secs() < timer_seconds {
+            return Ok(CurrentTimerState {
+                elapsed: Some(start_instant.elapsed().as_secs()),
+                timer_seconds: Some(timer_seconds),
+            });
+        } else {
+            *start_instant_state = None;
+            *timer_seconds_state = None;
+        }
     }
 
     return Ok(CurrentTimerState {
