@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import AppLoading from "./app-loading";
-import StartSession from "./start-session";
+import StartSession from "./session";
 
 export default function App() {
   return (

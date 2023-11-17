@@ -8,6 +8,7 @@ mod tray_menu;
 fn main() {
     tauri::Builder::default()
         .manage(state::TimerState::new())
+        .manage(state::StopwatchState::new())
         .system_tray(tray_menu::get_tray_menu())
         .on_system_tray_event(tray_menu::handle_system_tray_event)
         .invoke_handler(tauri::generate_handler![

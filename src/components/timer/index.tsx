@@ -33,11 +33,10 @@ function formattedTime(duration: number) {
   return integerDuration < 10 ? `0${integerDuration}` : `${integerDuration}`;
 }
 
-export default function Timer({ currentSecs, totalSecs }: ITimerProps) {
-  const remainingSecs = totalSecs - currentSecs;
-  const hours = remainingSecs / (60 * 60);
-  const mins = remainingSecs / 60;
-  const secs = remainingSecs % 60;
+function FormattedTime({ seconds }: { seconds: number }) {
+  const hours = seconds / (60 * 60);
+  const mins = seconds / 60;
+  const secs = seconds % 60;
   return (
     <div>
       <span className="text-6xl text-gray-900 dark:text-white">
@@ -45,4 +44,13 @@ export default function Timer({ currentSecs, totalSecs }: ITimerProps) {
       </span>
     </div>
   );
+}
+
+export function Timer({ currentSecs, totalSecs }: ITimerProps) {
+  const remainingSecs = totalSecs - currentSecs;
+  return <FormattedTime seconds={remainingSecs} />;
+}
+
+export function Stopwatch({ currentSecs }: ITimerProps) {
+  return <FormattedTime seconds={currentSecs} />;
 }

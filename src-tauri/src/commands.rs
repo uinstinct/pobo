@@ -2,7 +2,7 @@ use tokio::time::{interval as tokio_interval, Duration, Instant};
 
 use tauri::{api::notification::Notification, AppHandle, Manager};
 
-use crate::state::TimerState;
+use crate::state::{StopwatchState, TimerState};
 
 async fn notify_timer_finish(
     app_handle: AppHandle,
@@ -26,6 +26,8 @@ async fn notify_timer_finish(
         .title("Timer Complete")
         .body("The timer has completed")
         .show();
+
+    StopwatchState::start(&app_handle).await;
 }
 
 #[tauri::command]
