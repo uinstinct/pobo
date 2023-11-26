@@ -1,9 +1,11 @@
+use derive_macro::MutexGetSet;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 use tokio::time::{interval, Duration, Instant};
 
 /// Session Timer
+#[derive(MutexGetSet)]
 pub struct TimerState {
     pub start_instant: Mutex<Option<Instant>>,
     pub timer_seconds: Mutex<Option<u64>>,
