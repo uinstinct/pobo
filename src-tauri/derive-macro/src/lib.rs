@@ -1,10 +1,11 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{self, parse_macro_input, DeriveInput, FieldsNamed, Type};
 
 mod helpers {
-    use quote::ToTokens;
+    use proc_macro2::{Ident, TokenStream as TokenStream2};
+    use quote::{format_ident, quote, ToTokens};
     use syn::{GenericArgument, PathArguments, Type, TypePath};
 
     pub fn get_struct_inner_field_type(struct_field_type_path: &TypePath) -> Type {
@@ -32,6 +33,30 @@ mod helpers {
 
     pub fn is_clonable(field_type: &Type) -> bool {
         !format!("{}", field_type.to_token_stream()).contains("JoinHandle")
+    }
+
+    pub fn mutex_getter_setter(
+        impl_stream: &mut TokenStream2,
+        field: &Option<Ident>,
+        mutex_field_type: &Type,
+    ) {
+        let field_name = field.clone().unwrap();
+        let getter_function_name = format_ident!("get_{}", field_name);
+
+        impl_stream.extend::<TokenStream2>(quote! {
+            pub async fn #getter_function_name(&self) -> #mutex_field_type {
+                let value = self.#field_name.lock().await;
+                (*value).clone()
+            }
+        });
+
+        let setter_function_name = format_ident!("set_{}", field_name);
+        impl_stream.extend::<TokenStream2>(quote! {
+            pub async fn #setter_function_name(&self, value: #mutex_field_type) {
+                let mut mutexed_field = self.#field_name.lock().await;
+                *mutexed_field = value;
+            }
+        })
     }
 }
 
@@ -62,15 +87,7 @@ pub fn mutex_get_set(input: TokenStream) -> TokenStream {
                                 continue;
                             }
 
-                            let field_name = field.clone().unwrap();
-                            let function_name = format_ident!("get_{}", field_name);
-
-                            impl_stream.extend::<TokenStream2>(quote! {
-                                pub async fn #function_name(&self) -> #mutex_field_type {
-                                    let value = self.#field_name.lock().await;
-                                    (*value).clone()
-                                }
-                            });
+                            helpers::mutex_getter_setter(&mut impl_stream, field, &mutex_field_type)
                         }
                     }
                     _ => {}
