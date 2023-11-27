@@ -13,7 +13,8 @@ fn main() {
         .on_system_tray_event(tray_menu::handle_system_tray_event)
         .invoke_handler(tauri::generate_handler![
             commands::start_timer,
-            commands::resync_timer
+            commands::resync_timer,
+            commands::resync_stopwatch
         ])
         .setup(|app| {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);

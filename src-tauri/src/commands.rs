@@ -72,8 +72,11 @@ pub async fn resync_timer(
 ) -> Result<CurrentTimerState, ()> {
     println!("resyncing the timer");
 
-    let start_instant_state = timer_state.get_start_instant().await;
-    let timer_seconds_state = timer_state.get_timer_seconds().await;
+    let (start_instant_state, timer_seconds_state) = future::join(
+        timer_state.get_start_instant(),
+        timer_state.get_timer_seconds(),
+    )
+    .await;
 
     if let (Some(start_instant), Some(timer_seconds)) = (start_instant_state, timer_seconds_state) {
         if start_instant.elapsed().as_secs() < timer_seconds {
@@ -82,8 +85,11 @@ pub async fn resync_timer(
                 timer_seconds: Some(timer_seconds),
             });
         } else {
-            timer_state.set_start_instant(None).await;
-            timer_state.set_timer_seconds(None).await;
+            future::join(
+                timer_state.set_start_instant(None),
+                timer_state.set_timer_seconds(None),
+            )
+            .await;
         }
     }
 
@@ -94,4 +100,26 @@ pub async fn resync_timer(
     println!("current_timer_state was {:#?}", current_timer_state);
 
     current_timer_state
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct CurrentStopWatchState {
+    pub elapsed: Option<u64>,
+}
+
+#[tauri::command]
+pub async fn resync_stopwatch(
+    stopwatch_state: tauri::State<'_, StopwatchState>,
+) -> Result<CurrentStopWatchState, ()> {
+    println!("resyncing the stopwatch");
+
+    let start_instant_state = stopwatch_state.get_start_instant().await;
+
+    let elapsed = if let Some(start_instant) = start_instant_state {
+        Some(start_instant.elapsed().as_secs())
+    } else {
+        None
+    };
+
+    Ok(CurrentStopWatchState { elapsed })
 }

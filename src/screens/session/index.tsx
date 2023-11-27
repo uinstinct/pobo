@@ -21,8 +21,13 @@ export default function WrappedSession() {
  * For example, when the `SessionTimer` finishes, instead of `SessionTimer` switching the `showStopwatch` state, "stopwatch_started" event is listened from the backend
  */
 function Session() {
-  const { showTimerInput, showTimer, showStopwatch, timerSeconds } =
-    useSession();
+  const {
+    showTimerInput,
+    showTimer,
+    showStopwatch,
+    timerSeconds,
+    stopwatchSeconds,
+  } = useSession();
 
   useEffect(() => {
     let unlistenStopwatchStart: UnlistenFn = () => {};
@@ -48,6 +53,15 @@ function Session() {
       }
     });
   }, [showTimer.value]);
+
+  useEffect(() => {
+    invoke<{ elapsed: number | null }>("resync_stopwatch").then((payload) => {
+      if (!showStopwatch.value && payload.elapsed) {
+        stopwatchSeconds.current.set(payload.elapsed);
+        showStopwatch.set(true);
+      }
+    });
+  }, [showStopwatch.value]);
 
   return (
     <div className="h-screen flex justify-center items-center">
