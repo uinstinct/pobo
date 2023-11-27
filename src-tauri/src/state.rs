@@ -32,9 +32,10 @@ impl TimerState {
 }
 
 /// Cooldown Stopwatch
+#[derive(MutexGetSet)]
 pub struct StopwatchState {
-    pub start_instant: Mutex<Option<Instant>>,
-    pub notify_stopwatch_task: Mutex<Option<JoinHandle<()>>>,
+    start_instant: Mutex<Option<Instant>>,
+    notify_stopwatch_task: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl StopwatchState {
@@ -48,21 +49,19 @@ impl StopwatchState {
     pub async fn start(app_handle: &AppHandle) {
         println!("stopwatch started");
         app_handle.emit_all("stopwatch_started", ()).unwrap();
-
-        let start_instant = Instant::now();
-
         let stopwatch_state = app_handle.state::<Self>();
 
-        let mut start_intant_state = stopwatch_state.start_instant.lock().await;
-        *start_intant_state = Some(start_instant);
+        let start_instant = Instant::now();
+        stopwatch_state.set_start_instant(Some(start_instant)).await;
 
         let notify_stopwatch_task = tauri::async_runtime::spawn(Self::tick_and_notify_stop(
             app_handle.clone(),
             start_instant,
         ));
 
-        let mut notify_stopwatch_task_state = stopwatch_state.notify_stopwatch_task.lock().await;
-        *notify_stopwatch_task_state = Some(notify_stopwatch_task);
+        stopwatch_state
+            .set_notify_stopwatch_task(Some(notify_stopwatch_task))
+            .await;
     }
 
     async fn tick_and_notify_stop(app_handle: AppHandle, start_instant: Instant) {
