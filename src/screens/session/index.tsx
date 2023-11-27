@@ -29,8 +29,6 @@ function Session() {
     once("stopwatch_started", () => {
       if (showStopwatch.value) return;
       showStopwatch.set(true);
-      showTimerInput.set(false);
-      showTimer.set(false);
     }).then((_unlisten) => (unlistenStopwatchStart = _unlisten));
     return unlistenStopwatchStart;
   }, []);

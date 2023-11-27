@@ -1,6 +1,5 @@
 import { Timer } from "@/components/timer";
 import { UnlistenFn, listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useRef } from "react";
 import { useSession } from "./session-context";
 
@@ -33,9 +32,7 @@ export default function SessionTimer() {
 
   useEffect(() => {
     if (!timerSeconds.total.value) return;
-    invoke("start_timer", { timerSeconds: timerSeconds.total.value }).then(() =>
-      startTimerInterval()
-    );
+    startTimerInterval();
   }, [timerSeconds.total.value]);
 
   return (
