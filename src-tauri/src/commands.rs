@@ -39,25 +39,20 @@ pub async fn start_timer(
     println!("starting the timer");
 
     let start_instant = Instant::now();
+    timer_state.set_start_instant(Some(start_instant)).await;
 
-    let mut start_instant_state = timer_state.start_instant.lock().await;
-    *start_instant_state = Some(start_instant);
+    timer_state.set_timer_seconds(Some(timer_seconds)).await;
 
-    let mut timer_seconds_state = timer_state.timer_seconds.lock().await;
-    *timer_seconds_state = Some(timer_seconds);
-
-    let mut notify_timer_finish_task_state = timer_state.notify_timer_finish_task.lock().await;
-
-    if (*notify_timer_finish_task_state).is_some() {
-        (*notify_timer_finish_task_state).as_ref().unwrap().abort();
-    }
+    timer_state.abort_notify_timer_finish_task().await;
 
     let notify_timer_finish_task = tauri::async_runtime::spawn(notify_timer_finish(
         app_handle,
         start_instant,
         Duration::from_secs(timer_seconds),
     ));
-    *notify_timer_finish_task_state = Some(notify_timer_finish_task);
+    timer_state
+        .set_notify_timer_finish_task(Some(notify_timer_finish_task))
+        .await;
 
     Ok(())
 }
@@ -74,19 +69,18 @@ pub async fn resync_timer(
 ) -> Result<CurrentTimerState, ()> {
     println!("resyncing the timer");
 
-    let mut start_instant_state = timer_state.start_instant.lock().await;
-    let mut timer_seconds_state = timer_state.timer_seconds.lock().await;
+    let start_instant_state = timer_state.get_start_instant().await;
+    let timer_seconds_state = timer_state.get_timer_seconds().await;
 
-    if let (Some(start_instant), Some(timer_seconds)) = (*start_instant_state, *timer_seconds_state)
-    {
+    if let (Some(start_instant), Some(timer_seconds)) = (start_instant_state, timer_seconds_state) {
         if start_instant.elapsed().as_secs() < timer_seconds {
             return Ok(CurrentTimerState {
                 elapsed: Some(start_instant.elapsed().as_secs()),
                 timer_seconds: Some(timer_seconds),
             });
         } else {
-            *start_instant_state = None;
-            *timer_seconds_state = None;
+            timer_state.set_start_instant(None).await;
+            timer_state.set_timer_seconds(None).await;
         }
     }
 

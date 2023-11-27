@@ -35,7 +35,7 @@ mod helpers {
         !format!("{}", field_type.to_token_stream()).contains("JoinHandle")
     }
 
-    pub fn mutex_getter_setter(
+    pub fn mutex_getter(
         impl_stream: &mut TokenStream2,
         field: &Option<Ident>,
         mutex_field_type: &Type,
@@ -49,7 +49,14 @@ mod helpers {
                 (*value).clone()
             }
         });
+    }
 
+    pub fn mutex_setter(
+        impl_stream: &mut TokenStream2,
+        field: &Option<Ident>,
+        mutex_field_type: &Type,
+    ) {
+        let field_name = field.clone().unwrap();
         let setter_function_name = format_ident!("set_{}", field_name);
         impl_stream.extend::<TokenStream2>(quote! {
             pub async fn #setter_function_name(&self, value: #mutex_field_type) {
@@ -83,11 +90,11 @@ pub fn mutex_get_set(input: TokenStream) -> TokenStream {
                             let mutex_field_type =
                                 helpers::get_struct_inner_field_type(struct_field_type_path);
 
-                            if !helpers::is_clonable(&mutex_field_type) {
-                                continue;
+                            if helpers::is_clonable(&mutex_field_type) {
+                                helpers::mutex_getter(&mut impl_stream, field, &mutex_field_type);
                             }
 
-                            helpers::mutex_getter_setter(&mut impl_stream, field, &mutex_field_type)
+                            helpers::mutex_setter(&mut impl_stream, field, &mutex_field_type);
                         }
                     }
                     _ => {}

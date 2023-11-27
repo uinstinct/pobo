@@ -7,9 +7,9 @@ use tokio::time::{interval, Duration, Instant};
 /// Session Timer
 #[derive(MutexGetSet)]
 pub struct TimerState {
-    pub start_instant: Mutex<Option<Instant>>,
-    pub timer_seconds: Mutex<Option<u64>>,
-    pub notify_timer_finish_task: Mutex<Option<JoinHandle<()>>>,
+    start_instant: Mutex<Option<Instant>>,
+    timer_seconds: Mutex<Option<u64>>,
+    notify_timer_finish_task: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl TimerState {
@@ -19,6 +19,14 @@ impl TimerState {
             timer_seconds: Mutex::new(None),
             /// used to cancel the timer when a new timer starts or the old timer is cancelled
             notify_timer_finish_task: Mutex::new(None),
+        }
+    }
+
+    pub async fn abort_notify_timer_finish_task(&self) {
+        let notify_timer_finish_task = self.notify_timer_finish_task.lock().await;
+
+        if (*notify_timer_finish_task).is_some() {
+            (*notify_timer_finish_task).as_ref().unwrap().abort();
         }
     }
 }
