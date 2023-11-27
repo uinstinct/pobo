@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18nContext } from "@/i18n/i18n-react";
+import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect, useState } from "react";
 import { useSession } from "./session-context";
 
@@ -60,7 +61,7 @@ function HoursMinsSecsInput({
 
 export default function TimerInput() {
   const { LL } = useI18nContext();
-  const { timerSeconds, showTimer, showTimerInput } = useSession();
+  const { timerSeconds, showTimer } = useSession();
   return (
     <div className="flex flex-col justify-center">
       <Button
@@ -68,8 +69,8 @@ export default function TimerInput() {
         size="large"
         className="rounded-lg"
         onClick={() => {
+          invoke("start_timer", { timerSeconds: timerSeconds.total.value });
           showTimer.set(true);
-          showTimerInput.set(false);
         }}
       >
         {LL.START_SESSION()}

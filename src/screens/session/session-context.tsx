@@ -1,5 +1,5 @@
 import { StateValueType, useValueState } from "@/utils/state";
-import { ReactNode, createContext, useContext } from "react";
+import { ReactNode, SetStateAction, createContext, useContext } from "react";
 
 interface ISessionContext {
   showTimerInput: StateValueType<boolean>;
@@ -32,15 +32,36 @@ export function SessionContextProvider({ children }: { children: ReactNode }) {
   return (
     <SessionContext.Provider
       value={{
-        showTimerInput,
+        showTimerInput: {
+          value: showTimerInput.value,
+          set: (value: SetStateAction<boolean>) => {
+            showTimerInput.set(value);
+            showTimer.set(!value);
+            showStopwatch.set(!value);
+          },
+        },
 
-        showTimer,
+        showTimer: {
+          value: showTimer.value,
+          set: (value: SetStateAction<boolean>) => {
+            showTimer.set(value);
+            showTimerInput.set(!value);
+            showStopwatch.set(!value);
+          },
+        },
         timerSeconds: {
           current: timerSecondsCurrent,
           total: timerSecondsTotal,
         },
 
-        showStopwatch,
+        showStopwatch: {
+          value: showStopwatch.value,
+          set: (value: SetStateAction<boolean>) => {
+            showStopwatch.set(value);
+            showTimer.set(!value);
+            showTimerInput.set(!value);
+          },
+        },
         stopwatchSeconds: {
           current: stopwatchSecondsCurrent,
         },
