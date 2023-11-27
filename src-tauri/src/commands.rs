@@ -1,3 +1,4 @@
+use futures::future;
 use tokio::time::{interval as tokio_interval, Duration, Instant};
 
 use tauri::{api::notification::Notification, AppHandle, Manager};
@@ -39,11 +40,13 @@ pub async fn start_timer(
     println!("starting the timer");
 
     let start_instant = Instant::now();
-    timer_state.set_start_instant(Some(start_instant)).await;
 
-    timer_state.set_timer_seconds(Some(timer_seconds)).await;
-
-    timer_state.abort_notify_timer_finish_task().await;
+    future::join3(
+        timer_state.set_start_instant(Some(start_instant)),
+        timer_state.set_timer_seconds(Some(timer_seconds)),
+        timer_state.abort_notify_timer_finish_task(),
+    )
+    .await;
 
     let notify_timer_finish_task = tauri::async_runtime::spawn(notify_timer_finish(
         app_handle,
@@ -57,7 +60,7 @@ pub async fn start_timer(
     Ok(())
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct CurrentTimerState {
     pub elapsed: Option<u64>,
     pub timer_seconds: Option<u64>,
@@ -84,8 +87,11 @@ pub async fn resync_timer(
         }
     }
 
-    return Ok(CurrentTimerState {
+    let current_timer_state = Ok(CurrentTimerState {
         elapsed: None,
         timer_seconds: None,
     });
+    println!("current_timer_state was {:#?}", current_timer_state);
+
+    current_timer_state
 }
