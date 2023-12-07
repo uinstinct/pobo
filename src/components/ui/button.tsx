@@ -15,6 +15,7 @@ const button = cva("button", {
         "border-gray-400",
         "hover:bg-gray-100",
       ],
+      danger: ["bg-red-800", "text-white", "border", "hover:bg-red-900"],
     },
     size: {
       small: ["text-sm", "py-1", "px-2"],

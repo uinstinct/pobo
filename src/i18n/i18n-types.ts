@@ -22,6 +22,10 @@ type RootTranslation = {
 	 * S​t​a​r​t​ ​S​e​s​s​i​o​n
 	 */
 	START_SESSION: string
+	/**
+	 * S​t​o​p​ ​S​e​s​s​i​o​n
+	 */
+	STOP_SESSION: string
 }
 
 export type TranslationFunctions = {
@@ -33,6 +37,10 @@ export type TranslationFunctions = {
 	 * Start Session
 	 */
 	START_SESSION: () => LocalizedString
+	/**
+	 * Stop Session
+	 */
+	STOP_SESSION: () => LocalizedString
 }
 
 export type Formatters = {}

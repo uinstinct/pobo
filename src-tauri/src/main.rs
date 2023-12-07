@@ -14,6 +14,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::start_timer,
             commands::resync_timer,
+            commands::stop_timer,
             commands::resync_stopwatch
         ])
         .setup(|app| {

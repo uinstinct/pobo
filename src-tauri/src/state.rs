@@ -1,4 +1,5 @@
 use derive_macro::MutexGetSet;
+use futures::future;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
@@ -28,6 +29,15 @@ impl TimerState {
         if (*notify_timer_finish_task).is_some() {
             (*notify_timer_finish_task).as_ref().unwrap().abort();
         }
+    }
+
+    pub async fn stop(&self) {
+        future::join3(
+            self.set_start_instant(None),
+            self.set_timer_seconds(None),
+            self.abort_notify_timer_finish_task(),
+        )
+        .await;
     }
 }
 

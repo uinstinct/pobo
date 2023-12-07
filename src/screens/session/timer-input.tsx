@@ -69,6 +69,7 @@ export default function TimerInput() {
         size="large"
         className="rounded-lg"
         onClick={() => {
+          if (!timerSeconds.total.value) return;
           invoke("start_timer", { timerSeconds: timerSeconds.total.value });
           showTimer.set(true);
         }}

@@ -5,11 +5,14 @@ use tauri::{api::notification::Notification, AppHandle, Manager};
 
 use crate::state::{StopwatchState, TimerState};
 
-async fn notify_timer_finish(
-    app_handle: AppHandle,
-    start_instant: Instant,
-    timer_duration: Duration,
-) {
+/// a `timer_finished` event just stops the interval on the frontend. However, the state changes to stopwatch just after the timer is stopped (both manually and automatically)
+///
+/// So, **this event maynot be required** (requires state management reading)
+fn notify_timer_finished(app_handle: &AppHandle) {
+    app_handle.emit_all("timer_finished", ()).unwrap();
+}
+
+async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_duration: Duration) {
     let mut interval = tokio_interval(Duration::from_secs(1));
 
     loop {
@@ -20,7 +23,7 @@ async fn notify_timer_finish(
         }
     }
 
-    app_handle.emit_all("timer_finished", ()).unwrap();
+    notify_timer_finished(&app_handle);
 
     println!("Sending Notification (notifications are not visible during dev mode)");
     let _ = Notification::new(&app_handle.config().tauri.bundle.identifier)
@@ -48,7 +51,7 @@ pub async fn start_timer(
     )
     .await;
 
-    let notify_timer_finish_task = tauri::async_runtime::spawn(notify_timer_finish(
+    let notify_timer_finish_task = tauri::async_runtime::spawn(start_timer_task(
         app_handle,
         start_instant,
         Duration::from_secs(timer_seconds),
@@ -100,6 +103,18 @@ pub async fn resync_timer(
     println!("current_timer_state was {:#?}", current_timer_state);
 
     current_timer_state
+}
+
+#[tauri::command]
+pub async fn stop_timer(
+    timer_state: tauri::State<'_, TimerState>,
+    app_handle: AppHandle,
+) -> Result<(), ()> {
+    println!("manually stoping timer and starting stopwatch");
+    timer_state.stop().await;
+    notify_timer_finished(&app_handle);
+    StopwatchState::start(&app_handle).await;
+    Ok(())
 }
 
 #[derive(Debug, serde::Serialize)]
