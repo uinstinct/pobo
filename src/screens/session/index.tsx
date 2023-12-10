@@ -1,4 +1,4 @@
-import { UnlistenFn, once } from "@tauri-apps/api/event";
+import { UnlistenFn, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import { useEffect } from "react";
 import { SessionContextProvider, useSession } from "./session-context";
@@ -31,7 +31,7 @@ function Session() {
 
   useEffect(() => {
     let unlistenStopwatchStart: UnlistenFn = () => {};
-    once("stopwatch_started", () => {
+    listen("stopwatch_started", () => {
       if (showStopwatch.value) return;
       showStopwatch.set(true);
     }).then((_unlisten) => (unlistenStopwatchStart = _unlisten));
