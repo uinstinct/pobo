@@ -1,9 +1,8 @@
 use derive_macro::MutexGetSet;
 use futures::future;
 use tauri::async_runtime::JoinHandle;
-use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
-use tokio::time::{interval, Duration, Instant};
+use tokio::time::Instant;
 
 /// Session Timer
 #[derive(MutexGetSet)]
@@ -31,7 +30,7 @@ impl TimerState {
         }
     }
 
-    pub async fn stop(&self) {
+    pub async fn reset(&self) {
         future::join3(
             self.set_start_instant(None),
             self.set_timer_seconds(None),
@@ -54,38 +53,5 @@ impl StopwatchState {
             start_instant: Mutex::new(None),
             notify_stopwatch_task: Mutex::new(None),
         }
-    }
-
-    pub async fn start(app_handle: &AppHandle) {
-        println!("stopwatch started");
-        app_handle.emit_all("stopwatch_started", ()).unwrap();
-        let stopwatch_state = app_handle.state::<Self>();
-
-        let start_instant = Instant::now();
-        stopwatch_state.set_start_instant(Some(start_instant)).await;
-
-        let notify_stopwatch_task = tauri::async_runtime::spawn(Self::tick_and_notify_stop(
-            app_handle.clone(),
-            start_instant,
-        ));
-
-        stopwatch_state
-            .set_notify_stopwatch_task(Some(notify_stopwatch_task))
-            .await;
-    }
-
-    async fn tick_and_notify_stop(app_handle: AppHandle, start_instant: Instant) {
-        let mut interval = interval(Duration::from_secs(1));
-
-        loop {
-            interval.tick().await;
-
-            if start_instant.elapsed() > Duration::from_secs(1 * 10) {
-                break;
-            }
-        }
-
-        app_handle.emit_all("stopwatch_finished", ()).unwrap();
-        println!("stopwatch cooldown duration finished")
     }
 }

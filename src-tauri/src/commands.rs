@@ -25,13 +25,23 @@ async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_d
 
     notify_timer_finished(&app_handle);
 
+    let timer_state = app_handle.state::<TimerState>();
+
+    future::join(
+        timer_state.set_start_instant(None),
+        timer_state.set_timer_seconds(None),
+    )
+    .await;
+
     println!("Sending Notification (notifications are not visible during dev mode)");
     let _ = Notification::new(&app_handle.config().tauri.bundle.identifier)
         .title("Timer Complete")
         .body("The timer has completed")
         .show();
 
-    StopwatchState::start(&app_handle).await;
+    start_stopwatch(app_handle.state::<StopwatchState>(), app_handle.clone())
+        .await
+        .unwrap();
 }
 
 #[tauri::command]
@@ -81,25 +91,20 @@ pub async fn resync_timer(
     )
     .await;
 
-    if let (Some(start_instant), Some(timer_seconds)) = (start_instant_state, timer_seconds_state) {
-        if start_instant.elapsed().as_secs() < timer_seconds {
-            return Ok(CurrentTimerState {
-                elapsed: Some(start_instant.elapsed().as_secs()),
-                timer_seconds: Some(timer_seconds),
-            });
-        } else {
-            future::join(
-                timer_state.set_start_instant(None),
-                timer_state.set_timer_seconds(None),
-            )
-            .await;
-        }
-    }
+    let current_timer_state = if let (Some(start_instant), Some(timer_seconds)) =
+        (start_instant_state, timer_seconds_state)
+    {
+        Ok(CurrentTimerState {
+            elapsed: Some(start_instant.elapsed().as_secs()),
+            timer_seconds: Some(timer_seconds),
+        })
+    } else {
+        Ok(CurrentTimerState {
+            elapsed: None,
+            timer_seconds: None,
+        })
+    };
 
-    let current_timer_state = Ok(CurrentTimerState {
-        elapsed: None,
-        timer_seconds: None,
-    });
     println!("current_timer_state was {:#?}", current_timer_state);
 
     current_timer_state
@@ -111,15 +116,53 @@ pub async fn stop_timer(
     app_handle: AppHandle,
 ) -> Result<(), ()> {
     println!("manually stoping timer and starting stopwatch");
-    timer_state.stop().await;
+    timer_state.reset().await;
     notify_timer_finished(&app_handle);
-    StopwatchState::start(&app_handle).await;
+    start_stopwatch(app_handle.state::<StopwatchState>(), app_handle.clone())
+        .await
+        .unwrap();
     Ok(())
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct CurrentStopWatchState {
     pub elapsed: Option<u64>,
+}
+
+async fn start_stopwatch_task(app_handle: AppHandle, start_instant: Instant) {
+    let mut interval = tokio_interval(Duration::from_secs(1));
+
+    loop {
+        interval.tick().await;
+
+        if start_instant.elapsed() > Duration::from_secs(1 * 10) {
+            break;
+        }
+    }
+
+    app_handle.emit_all("stopwatch_finished", ()).unwrap();
+    println!("stopwatch cooldown duration finished")
+}
+
+#[tauri::command]
+async fn start_stopwatch(
+    stopwatch_state: tauri::State<'_, StopwatchState>,
+    app_handle: AppHandle,
+) -> Result<(), ()> {
+    println!("stopwatch started");
+    app_handle.emit_all("stopwatch_started", ()).unwrap();
+
+    let start_instant = Instant::now();
+    stopwatch_state.set_start_instant(Some(start_instant)).await;
+
+    let notify_stopwatch_task =
+        tauri::async_runtime::spawn(start_stopwatch_task(app_handle, start_instant));
+
+    stopwatch_state
+        .set_notify_stopwatch_task(Some(notify_stopwatch_task))
+        .await;
+
+    Ok(())
 }
 
 #[tauri::command]
