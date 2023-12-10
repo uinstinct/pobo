@@ -39,10 +39,6 @@ function Session() {
   }, []);
 
   useEffect(() => {
-    // TODO: resync_stopwatch
-  }, [showStopwatch.value]);
-
-  useEffect(() => {
     invoke<{ elapsed: number | null; timer_seconds: number | null }>(
       "resync_timer"
     ).then((payload) => {

@@ -57,18 +57,16 @@ pub async fn start_timer(
     future::join3(
         timer_state.set_start_instant(Some(start_instant)),
         timer_state.set_timer_seconds(Some(timer_seconds)),
-        timer_state.abort_notify_timer_finish_task(),
+        timer_state.abort_run_task(),
     )
     .await;
 
-    let notify_timer_finish_task = tauri::async_runtime::spawn(start_timer_task(
+    let timer_run_task = tauri::async_runtime::spawn(start_timer_task(
         app_handle,
         start_instant,
         Duration::from_secs(timer_seconds),
     ));
-    timer_state
-        .set_notify_timer_finish_task(Some(notify_timer_finish_task))
-        .await;
+    timer_state.set_run_task(Some(timer_run_task)).await;
 
     Ok(())
 }
@@ -162,12 +160,10 @@ async fn start_stopwatch(
     let start_instant = Instant::now();
     stopwatch_state.set_start_instant(Some(start_instant)).await;
 
-    let notify_stopwatch_task =
+    let stopwatch_run_task =
         tauri::async_runtime::spawn(start_stopwatch_task(app_handle, start_instant));
 
-    stopwatch_state
-        .set_notify_stopwatch_task(Some(notify_stopwatch_task))
-        .await;
+    stopwatch_state.set_run_task(Some(stopwatch_run_task)).await;
 
     Ok(())
 }

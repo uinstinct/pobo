@@ -9,7 +9,7 @@ use tokio::time::Instant;
 pub struct TimerState {
     start_instant: Mutex<Option<Instant>>,
     timer_seconds: Mutex<Option<u64>>,
-    notify_timer_finish_task: Mutex<Option<JoinHandle<()>>>,
+    run_task: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl TimerState {
@@ -18,15 +18,15 @@ impl TimerState {
             start_instant: Mutex::new(None),
             timer_seconds: Mutex::new(None),
             /// used to cancel the timer when a new timer starts or the old timer is cancelled
-            notify_timer_finish_task: Mutex::new(None),
+            run_task: Mutex::new(None),
         }
     }
 
-    pub async fn abort_notify_timer_finish_task(&self) {
-        let notify_timer_finish_task = self.notify_timer_finish_task.lock().await;
+    pub async fn abort_run_task(&self) {
+        let run_task = self.run_task.lock().await;
 
-        if (*notify_timer_finish_task).is_some() {
-            (*notify_timer_finish_task).as_ref().unwrap().abort();
+        if (*run_task).is_some() {
+            (*run_task).as_ref().unwrap().abort();
         }
     }
 
@@ -34,7 +34,7 @@ impl TimerState {
         future::join3(
             self.set_start_instant(None),
             self.set_timer_seconds(None),
-            self.abort_notify_timer_finish_task(),
+            self.abort_run_task(),
         )
         .await;
     }
@@ -44,19 +44,19 @@ impl TimerState {
 #[derive(MutexGetSet)]
 pub struct StopwatchState {
     start_instant: Mutex<Option<Instant>>,
-    notify_stopwatch_task: Mutex<Option<JoinHandle<()>>>,
+    run_task: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl StopwatchState {
     pub fn new() -> Self {
         Self {
             start_instant: Mutex::new(None),
-            notify_stopwatch_task: Mutex::new(None),
+            run_task: Mutex::new(None),
         }
     }
 
     pub async fn abort_notify_stopwatch_finish_task(&self) {
-        let notify_stopwatch_finish_task = self.notify_stopwatch_task.lock().await;
+        let notify_stopwatch_finish_task = self.run_task.lock().await;
 
         if (*notify_stopwatch_finish_task).is_some() {
             (*notify_stopwatch_finish_task).as_ref().unwrap().abort();
