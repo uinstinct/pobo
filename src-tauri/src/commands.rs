@@ -129,6 +129,10 @@ pub struct CurrentStopWatchState {
     pub elapsed: Option<u64>,
 }
 
+async fn notify_stopwatch_finished(app_handle: &AppHandle) {
+    app_handle.emit_all("stopwatch_finished", ()).unwrap();
+}
+
 async fn start_stopwatch_task(app_handle: AppHandle, start_instant: Instant) {
     let mut interval = tokio_interval(Duration::from_secs(1));
 
@@ -140,7 +144,10 @@ async fn start_stopwatch_task(app_handle: AppHandle, start_instant: Instant) {
         }
     }
 
-    app_handle.emit_all("stopwatch_finished", ()).unwrap();
+    let stopwatch_state = app_handle.state::<StopwatchState>();
+    stopwatch_state.set_start_instant(None).await;
+
+    notify_stopwatch_finished(&app_handle).await;
     println!("stopwatch cooldown duration finished")
 }
 
@@ -180,4 +187,17 @@ pub async fn resync_stopwatch(
     };
 
     Ok(CurrentStopWatchState { elapsed })
+}
+
+#[tauri::command]
+pub async fn stop_stopwatch(
+    stopwatch_state: tauri::State<'_, StopwatchState>,
+    app_handle: AppHandle,
+) -> Result<(), ()> {
+    println!("manually stopping the stopwatch");
+
+    stopwatch_state.reset().await;
+    notify_stopwatch_finished(&app_handle).await;
+
+    Ok(())
 }

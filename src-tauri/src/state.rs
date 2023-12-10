@@ -54,4 +54,20 @@ impl StopwatchState {
             notify_stopwatch_task: Mutex::new(None),
         }
     }
+
+    pub async fn abort_notify_stopwatch_finish_task(&self) {
+        let notify_stopwatch_finish_task = self.notify_stopwatch_task.lock().await;
+
+        if (*notify_stopwatch_finish_task).is_some() {
+            (*notify_stopwatch_finish_task).as_ref().unwrap().abort();
+        }
+    }
+
+    pub async fn reset(&self) {
+        future::join(
+            self.set_start_instant(None),
+            self.abort_notify_stopwatch_finish_task(),
+        )
+        .await;
+    }
 }

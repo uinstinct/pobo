@@ -26,6 +26,14 @@ type RootTranslation = {
 	 * S​t​o​p​ ​S​e​s​s​i​o​n
 	 */
 	STOP_SESSION: string
+	/**
+	 * N​e​x​t​ ​S​e​s​s​i​o​n
+	 */
+	NEXT_SESSION: string
+	/**
+	 * S​t​o​p​ ​C​o​o​l​d​o​w​n
+	 */
+	STOP_COOLDOWN: string
 }
 
 export type TranslationFunctions = {
@@ -41,6 +49,14 @@ export type TranslationFunctions = {
 	 * Stop Session
 	 */
 	STOP_SESSION: () => LocalizedString
+	/**
+	 * Next Session
+	 */
+	NEXT_SESSION: () => LocalizedString
+	/**
+	 * Stop Cooldown
+	 */
+	STOP_COOLDOWN: () => LocalizedString
 }
 
 export type Formatters = {}

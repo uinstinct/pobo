@@ -5,6 +5,8 @@ const en = {
   HI: "Hi {name:string}! Please leave a star if you like this project: https://github.com/ivanhofer/typesafe-i18n",
   START_SESSION: "Start Session",
   STOP_SESSION: "Stop Session",
+  NEXT_SESSION: "Next Session",
+  STOP_COOLDOWN: "Stop Cooldown",
 } satisfies BaseTranslation;
 
 export default en;

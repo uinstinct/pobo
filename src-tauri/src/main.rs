@@ -15,7 +15,8 @@ fn main() {
             commands::start_timer,
             commands::resync_timer,
             commands::stop_timer,
-            commands::resync_stopwatch
+            commands::resync_stopwatch,
+            commands::stop_stopwatch,
         ])
         .setup(|app| {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);

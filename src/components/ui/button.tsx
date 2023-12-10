@@ -15,6 +15,7 @@ const button = cva("button", {
         "border-gray-400",
         "hover:bg-gray-100",
       ],
+      success: ["bg-green-600", "text-white", "border", "hover:bg-green-700"],
       danger: ["bg-red-800", "text-white", "border", "hover:bg-red-900"],
     },
     size: {
