@@ -31,6 +31,10 @@ type RootTranslation = {
 	 */
 	NEXT_SESSION: string
 	/**
+	 * Q​u​i​c​k​ ​S​e​s​s​i​o​n
+	 */
+	QUICK_SESSION: string
+	/**
 	 * S​t​o​p​ ​C​o​o​l​d​o​w​n
 	 */
 	STOP_COOLDOWN: string
@@ -53,6 +57,10 @@ export type TranslationFunctions = {
 	 * Next Session
 	 */
 	NEXT_SESSION: () => LocalizedString
+	/**
+	 * Quick Session
+	 */
+	QUICK_SESSION: () => LocalizedString
 	/**
 	 * Stop Cooldown
 	 */

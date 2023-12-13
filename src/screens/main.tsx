@@ -1,12 +1,12 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import AppLoading from "./app-loading";
-import StartSession from "./session";
+import Home from "./home";
 
 export default function App() {
   return (
     <ThemeProvider defaultTheme="dark">
       <AppLoading>
-        <StartSession />
+        <Home />
       </AppLoading>
     </ThemeProvider>
   );
