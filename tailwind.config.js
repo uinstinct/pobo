@@ -1,8 +1,9 @@
-import { Config } from "tailwindcss";
-
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: { 
+    files: ["*.html", "./src/**/*.rs"],
+  },
   darkmode: "class",
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -48,5 +49,3 @@ const config: Config = {
     plugins: [],
   },
 };
-
-export default config;

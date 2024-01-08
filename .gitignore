@@ -5,6 +5,7 @@ logs
 /dist/
 /target/
 /Cargo.lock
+/style/
 
 
 # Editor directories and files
