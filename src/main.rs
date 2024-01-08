@@ -1,6 +1,7 @@
 mod app;
+mod tauri;
 
-use app::*;
+use crate::app::*;
 use leptos::*;
 
 fn main() {
