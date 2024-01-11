@@ -1,7 +1,10 @@
-mod app;
+mod components;
+mod screens;
+mod state;
 mod tauri;
+mod utils;
 
-use crate::app::*;
+use crate::screens::app::*;
 use leptos::*;
 
 fn main() {
