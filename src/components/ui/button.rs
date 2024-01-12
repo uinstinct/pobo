@@ -4,17 +4,19 @@ use leptos::*;
 #[component]
 pub fn Button(
     #[prop(default = true)] variant_default: bool,
-    #[prop(optional)] variant_destructive: bool,
-    #[prop(optional)] variant_outline: bool,
-    #[prop(optional)] variant_secondary: bool,
-    #[prop(optional)] variant_ghost: bool,
-    #[prop(optional)] variant_link: bool,
+    #[prop(optional, into)] variant_destructive: bool,
+    #[prop(optional, into)] variant_outline: bool,
+    #[prop(optional, into)] variant_secondary: bool,
+    #[prop(optional, into)] variant_ghost: bool,
+    #[prop(optional, into)] variant_link: bool,
 
     #[prop(default = true)] size_default: bool,
-    #[prop(optional)] size_sm: bool,
-    #[prop(optional)] size_lg: bool,
+    #[prop(optional, into)] size_sm: bool,
+    #[prop(optional, into)] size_lg: bool,
 
     #[prop(optional)] class: &'static str,
+
+    #[prop(optional, into)] on_click: Option<Callback<ev::MouseEvent>>,
 
     children: Children,
 ) -> impl IntoView {
@@ -35,7 +37,14 @@ pub fn Button(
         Some(class)
     ]);
 
+    let on_click = move |event| {
+        let Some(callback) = on_click.as_ref() else {
+            return;
+        };
+        callback.call(event);
+    };
+
     view! {
-        <button class=classes>{children()}</button>
+        <button class=classes on:click=on_click>{children()}</button>
     }
 }

@@ -1,6 +1,5 @@
 mod components;
 mod screens;
-mod state;
 mod tauri;
 mod utils;
 

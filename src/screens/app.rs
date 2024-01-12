@@ -1,5 +1,6 @@
-use crate::screens::home::Home;
-use crate::state::ThemeState;
+use crate::screens::state::{AppComponentEnum, AppComponentState, ThemeState};
+use crate::screens::Home;
+use crate::screens::Session;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +11,10 @@ struct GreetArgs<'a> {
 
 #[component]
 pub fn App() -> impl IntoView {
+    let app_component_state = AppComponentState::new();
     let theme_state = ThemeState::new();
+
+    provide_context(app_component_state);
     provide_context(theme_state);
 
     create_effect(move |_| theme_state.set_document_theme());
@@ -20,7 +24,14 @@ pub fn App() -> impl IntoView {
     view! {
         <Suspense>
             <div class="h-screen flex justify-center items-center">
-                <Home />
+                {move || match app_component_state.component.get() {
+                    AppComponentEnum::Home => {
+                        view! {<Home/>}
+                    },
+                    AppComponentEnum::Session => {
+                        view! {<Session />}
+                    }
+                }}
             </div>
         </Suspense>
     }

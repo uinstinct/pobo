@@ -1,23 +1,46 @@
 use leptos::{leptos_dom::logging::console_log, *};
 
+/// Component State
+
+#[derive(Clone, Copy, Debug)]
+pub enum AppComponentEnum {
+    Home,
+    Session,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct AppComponentState {
+    pub component: RwSignal<AppComponentEnum>,
+}
+
+impl AppComponentState {
+    pub fn new() -> Self {
+        Self {
+            component: create_rw_signal(AppComponentEnum::Home),
+        }
+    }
+}
+
+/// Theme State
+
 #[derive(Clone, Copy)]
 #[allow(dead_code)]
-pub enum ThemeEnum {
+enum ThemeEnum {
     Dark,
     Light,
 }
 
 #[derive(Copy, Clone)]
 pub struct ThemeState {
-    pub theme: RwSignal<ThemeEnum>,
+    theme: RwSignal<ThemeEnum>,
 }
 
 impl ThemeState {
     pub fn new() -> Self {
         // TODO: add the theme use matchmedia or localstorage
-        return Self {
+        Self {
             theme: create_rw_signal(ThemeEnum::Dark),
-        };
+        }
     }
 
     pub fn set_document_theme(&self) {
