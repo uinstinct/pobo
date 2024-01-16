@@ -23,16 +23,14 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Suspense>
-            <div class="h-screen flex justify-center items-center">
-                {move || match app_component_state.component.get() {
-                    AppComponentEnum::Home => {
-                        view! {<Home/>}
-                    },
-                    AppComponentEnum::Session => {
-                        view! {<Session />}
-                    }
-                }}
-            </div>
+            {move || match app_component_state.component.get() {
+                AppComponentEnum::Home => {
+                    view! {<Home/>}
+                },
+                AppComponentEnum::Session => {
+                    view! {<Session />}
+                }
+            }}
         </Suspense>
     }
 }

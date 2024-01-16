@@ -11,7 +11,7 @@ pub fn Home() -> impl IntoView {
         use_context::<AppComponentState>().expect("AppComponentState not provided");
 
     view! {
-        <button class="absolute top-2 right-2">
+      <button class="absolute top-2 right-2">
         <img src="/public/icons/settings.svg" className="h-6 w-h-6" />
       </button>
       <div class="h-screen flex justify-center items-center flex-col">
