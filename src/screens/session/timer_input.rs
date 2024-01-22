@@ -1,13 +1,22 @@
 use leptos::*;
+use serde::{Deserialize, Serialize};
+use tauri_sys::tauri::invoke;
 
-use crate::components::ui::{Button, Input};
-
-use super::state::{SessionComponentEnum, SessionComponentState};
+use crate::{
+    components::ui::{Button, Input},
+    utils::log_error,
+};
 
 const START_SESSION: &str = "Start Session";
 
 fn parse_as_number(value: String) -> u32 {
     value.parse::<u32>().unwrap_or(0)
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize)]
+struct StartTimerInput {
+    timerSeconds: u32,
 }
 
 #[component]
@@ -62,17 +71,22 @@ fn HoursMinsSecsInput(#[prop(into)] on_total_seconds_change: Callback<u32>) -> i
 
 #[component]
 pub fn TimerInput() -> impl IntoView {
-    let session_component_state =
-        use_context::<SessionComponentState>().expect("SessionComponentState not provided");
     let total_seconds = create_rw_signal::<u32>(0);
+
+    let invoke_start_timer = create_action(|timer_seconds: &u32| {
+        let timerSeconds = timer_seconds.to_owned();
+        async move {
+            invoke::<_, ()>("start_timer", &StartTimerInput { timerSeconds })
+                .await
+                .unwrap_or_else(log_error);
+        }
+    });
 
     let on_start_session_click = move |_| {
         if total_seconds.get() == 0 {
             return;
         }
-        session_component_state
-            .component
-            .set(SessionComponentEnum::Timer);
+        invoke_start_timer.dispatch(total_seconds.get_untracked());
     };
 
     view! {

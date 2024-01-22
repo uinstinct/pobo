@@ -1,3 +1,7 @@
+use std::fmt;
+
+use leptos::leptos_dom::logging::console_log;
+
 pub fn build_classes(classes: Vec<Option<&str>>) -> String {
     classes
         .into_iter()
@@ -20,4 +24,8 @@ pub fn build_classes(classes: Vec<Option<&str>>) -> String {
         .collect::<String>()
         .trim()
         .to_string()
+}
+
+pub fn log_error(err: impl fmt::Debug) {
+    console_log(format!("NOT EXPECTED ERROR {:#?}", err).as_str());
 }

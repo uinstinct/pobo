@@ -1,30 +1,8 @@
 use leptos::{leptos_dom::logging::console_log, *};
 
-/// Component State
-
-#[derive(Clone, Copy, Debug)]
-pub enum AppComponentEnum {
-    Home,
-    Session,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct AppComponentState {
-    pub component: RwSignal<AppComponentEnum>,
-}
-
-impl AppComponentState {
-    pub fn new() -> Self {
-        Self {
-            component: create_rw_signal(AppComponentEnum::Home),
-        }
-    }
-}
-
 /// Theme State
 
 #[derive(Clone, Copy)]
-#[allow(dead_code)]
 enum ThemeEnum {
     Dark,
     Light,

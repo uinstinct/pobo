@@ -1,6 +1,5 @@
 mod components;
 mod screens;
-mod tauri;
 mod utils;
 
 use crate::screens::app::*;

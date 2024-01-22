@@ -3,20 +3,11 @@ use leptos::*;
 use crate::components::timer::Timer;
 use crate::components::ui::Button;
 
-use super::{SessionComponentEnum, SessionComponentState};
-
 const STOP_SESSION: &str = "Stop Session";
 
 #[component]
 pub fn SessionTimer() -> impl IntoView {
-    let session_component_state =
-        use_context::<SessionComponentState>().expect("SessionComponentState not provided");
-
-    let manually_stop_timer = move |_| {
-        session_component_state
-            .component
-            .set(SessionComponentEnum::Stopwatch);
-    };
+    let manually_stop_timer = move |_| {};
 
     view! {
         <div>
