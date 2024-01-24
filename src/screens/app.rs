@@ -1,7 +1,7 @@
 use crate::screens::state::ThemeState;
-use crate::screens::Home;
-use crate::screens::Session;
+use crate::screens::{session, Home};
 use leptos::*;
+use leptos_router::{Route, Router, Routes};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -20,8 +20,15 @@ pub fn App() -> impl IntoView {
     // TODO: implement internationalization props here
 
     view! {
-        <Suspense>
-            <Session />
-        </Suspense>
+        <Router>
+            <main>
+                <Routes>
+                    <Route path="/" view=Home/>
+                    <Route path="/session/timer-input" view=session::TimerInput />
+                    <Route path="/session/timer" view=session::SessionTimer />
+                    <Route path="/session/stopwatch" view=session::Stopwatch />
+                </Routes>
+            </main>
+        </Router>
     }
 }

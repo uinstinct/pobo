@@ -1,4 +1,5 @@
 use leptos::*;
+use leptos_router::use_navigate;
 use serde::{Deserialize, Serialize};
 use tauri_sys::tauri::invoke;
 
@@ -72,25 +73,33 @@ fn HoursMinsSecsInput(#[prop(into)] on_total_seconds_change: Callback<u32>) -> i
 #[component]
 pub fn TimerInput() -> impl IntoView {
     let total_seconds = create_rw_signal::<u32>(0);
+    let navigate = use_navigate();
 
     let invoke_start_timer = create_action(|timer_seconds: &u32| {
         let timerSeconds = timer_seconds.to_owned();
-        async move {
-            invoke::<_, ()>("start_timer", &StartTimerInput { timerSeconds })
-                .await
-                .unwrap_or_else(log_error);
-        }
+        async move { invoke::<_, ()>("start_timer", &StartTimerInput { timerSeconds }).await }
     });
 
     let on_start_session_click = move |_| {
-        if total_seconds.get() == 0 {
+        if total_seconds.get_untracked() == 0 {
             return;
         }
         invoke_start_timer.dispatch(total_seconds.get_untracked());
     };
 
+    create_effect(move |_| {
+        let invoke_result = invoke_start_timer.value().get();
+        if let Some(invoke_result) = invoke_result {
+            if invoke_result.is_ok() {
+                navigate("/session/timer", Default::default());
+            } else {
+                log_error(invoke_result.unwrap_err());
+            }
+        }
+    });
+
     view! {
-        <div class="flex flex-col justify-center">
+        <div class="h-screen flex flex-col justify-center items-center">
            <Button on_click=on_start_session_click>{START_SESSION}</Button>
            <HoursMinsSecsInput on_total_seconds_change=move |secs| total_seconds.set(secs) />
         </div>
