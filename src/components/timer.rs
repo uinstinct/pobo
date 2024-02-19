@@ -1,6 +1,6 @@
 use leptos::*;
 
-fn formatted_time(duration: u32) -> String {
+fn formatted_time(duration: u64) -> String {
     if duration < 10 {
         format!("0{}", duration)
     } else {
@@ -9,7 +9,7 @@ fn formatted_time(duration: u32) -> String {
 }
 
 #[component]
-pub fn Timer(current_secs: u32, #[prop(optional)] total_seconds: u32) -> impl IntoView {
+pub fn Timer(current_secs: u64, #[prop(optional)] total_seconds: u64) -> impl IntoView {
     let remaining_secs = if total_seconds != 0 {
         total_seconds - current_secs
     } else {

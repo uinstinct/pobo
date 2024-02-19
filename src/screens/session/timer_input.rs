@@ -30,8 +30,8 @@ fn HoursMinsSecsInput(#[prop(into)] on_total_seconds_change: Callback<u32>) -> i
         move |input: String| {
             let input = input.trim();
             if input.is_empty() {
-                time_signal.set(input.to_string());
-            } else if let Ok(input) = input.trim().parse::<u8>() {
+                time_signal.set("".to_string());
+            } else if let Ok(input) = input.parse::<u8>() {
                 if input < 60 {
                     time_signal.set(input.to_string());
                 } else {
