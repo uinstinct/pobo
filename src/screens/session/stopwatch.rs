@@ -13,7 +13,7 @@ pub fn Stopwatch() -> impl IntoView {
             <div>
                 <Timer current_secs=60 />
                 <div class="flex justify-center m-5">
-                    <Button>{STOP_COOLDOWN}</Button>
+                    <Button on_click=move |_| window().history().unwrap().back().unwrap()>{STOP_COOLDOWN}</Button>
                     // <Button>{NEXT_SESSION}</Button>
                 </div>
             </div>
