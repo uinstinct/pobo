@@ -29,13 +29,6 @@ pub fn SessionTimer() -> impl IntoView {
     let invoke_stop_timer =
         create_action(|_: &()| async move { invoke::<_, ()>("stop_timer", &()).await });
 
-    let manually_stop_timer = move |_| {
-        invoke_stop_timer.dispatch(());
-        if let Some(timer_handle) = timer_handle.get_untracked() {
-            timer_handle.clear();
-        }
-    };
-
     let fetch_timer_data = move || async move {
         let timer_result = invoke::<_, ResyncTimerResult>("resync_timer", &()).await;
 
@@ -68,6 +61,12 @@ pub fn SessionTimer() -> impl IntoView {
         }
     });
 
+    on_cleanup(move || {
+        if let Some(timer_handle) = timer_handle.get_untracked() {
+            timer_handle.clear();
+        }
+    });
+
     view! {
         <Await
             future=move || fetch_timer_data()
@@ -81,7 +80,7 @@ pub fn SessionTimer() -> impl IntoView {
                             variant_destructive=true
                             size_lg=true
                             class="rounded-lg"
-                            on_click=manually_stop_timer
+                            on_click=move |_| invoke_stop_timer.dispatch(())
                         >
                             {STOP_SESSION}
                         </Button>
