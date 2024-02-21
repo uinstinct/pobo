@@ -38,7 +38,7 @@ pub fn SessionTimer() -> impl IntoView {
 
             let interval_result = set_interval_with_handle(
                 move || {
-                    elapsed.set(elapsed.get() + 1);
+                    elapsed.set(elapsed.get_untracked() + 1);
                 },
                 Duration::from_secs(1),
             );
@@ -69,7 +69,7 @@ pub fn SessionTimer() -> impl IntoView {
 
     view! {
         <Await
-            future=move || fetch_timer_data()
+            future=fetch_timer_data
             let:_data
             >
             <div class="h-screen flex justify-center items-center">

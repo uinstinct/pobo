@@ -15,7 +15,7 @@ struct ResyncTimerResult {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-struct ResyncStopwatch {
+struct ResyncStopwatchResult {
     elapsed: Option<u64>,
 }
 
@@ -46,7 +46,7 @@ pub fn SessionRoutes() -> impl IntoView {
             if let Ok(invoke_result) = invoke_result {
                 invoke_result
             }
-            ResyncStopwatch { elapsed: None }
+            ResyncStopwatchResult { elapsed: None }
         },
     );
 
