@@ -5,13 +5,6 @@ use tauri::{api::notification::Notification, AppHandle, Manager};
 
 use crate::state::{StopwatchState, TimerState};
 
-/// a `timer_finished` event just stops the interval on the frontend. However, the state changes to stopwatch just after the timer is stopped (both manually and automatically)
-///
-/// So, **this event maynot be required** (requires state management reading)
-fn notify_timer_finished(app_handle: &AppHandle) {
-    app_handle.emit_all("timer_finished", ()).unwrap();
-}
-
 async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_duration: Duration) {
     let mut interval = tokio_interval(Duration::from_secs(1));
 
@@ -22,8 +15,6 @@ async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_d
             break;
         }
     }
-
-    notify_timer_finished(&app_handle);
 
     let timer_state = app_handle.state::<TimerState>();
 
@@ -115,7 +106,6 @@ pub async fn stop_timer(
 ) -> Result<(), ()> {
     println!("manually stoping timer and starting stopwatch");
     timer_state.reset().await;
-    notify_timer_finished(&app_handle);
     start_stopwatch(app_handle.state::<StopwatchState>(), app_handle.clone())
         .await
         .unwrap();
