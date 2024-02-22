@@ -59,10 +59,8 @@ pub fn SessionRoutes() -> impl IntoView {
             }
             let mut event_stream = event_stream.unwrap();
             let stopwatch_started_event = event_stream.next().await;
-            if stopwatch_started_event.is_some() {
-                console_log(
-                    format!("stopwatch started {:#?}", stopwatch_started_event.unwrap()).as_str(),
-                );
+            if let Some(stopwatch_started_event) = stopwatch_started_event {
+                console_log(format!("stopwatch started {:#?}", stopwatch_started_event).as_str());
                 return true;
             }
             false

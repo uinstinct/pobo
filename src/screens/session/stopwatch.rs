@@ -1,10 +1,12 @@
 use std::time::Duration;
 
+use futures::StreamExt;
 use leptos::leptos_dom::helpers::IntervalHandle;
 use leptos::leptos_dom::logging::console_log;
 use leptos::*;
 use leptos_router::use_navigate;
 use serde::{Deserialize, Serialize};
+use tauri_sys::event::listen;
 use tauri_sys::tauri::invoke;
 
 use crate::components::timer::Timer;
@@ -22,6 +24,23 @@ struct ResyncStopwatchResult {
 pub fn Stopwatch() -> impl IntoView {
     let elapsed = create_rw_signal(0);
     let timer_handle = create_rw_signal::<Option<IntervalHandle>>(None);
+
+    let stopwatch_started_resource = create_resource(
+        || (),
+        |_| async move {
+            let event_stream = listen::<()>("stopwatch_finished").await;
+            if event_stream.is_err() {
+                return;
+            }
+            let mut event_stream = event_stream.unwrap();
+            let stopwatch_stopped_event = event_stream.next().await;
+            if stopwatch_stopped_event.is_some() {
+                console_log(
+                    format!("stopwatch stopped {:#?}", stopwatch_stopped_event.unwrap()).as_str(),
+                );
+            }
+        },
+    );
 
     let fetch_stopwatch_data = move || async move {
         let stopwatch_result = invoke::<_, ResyncStopwatchResult>("resync_stopwatch", &()).await;
@@ -51,12 +70,18 @@ pub fn Stopwatch() -> impl IntoView {
                 <div class="flex flex-col justify-center items-center">
                     <Timer current_secs=elapsed.get() />
                     <div class="flex gap-2 m-5">
-                        <Button on_click=|_| {
+                        <Button variant_destructive=true on_click=move |_| {
                             let navigate = use_navigate();
+                            if let Some(timer_handle) = timer_handle.get_untracked() {
+                                timer_handle.clear();
+                            }
                             navigate("/", Default::default());
                         }>{STOP_COOLDOWN}</Button>
-                        <Button on_click=|_| {
+                        <Button disabled=stopwatch_started_resource.loading().get() on_click=move |_| {
                             let navigate = use_navigate();
+                            if let Some(timer_handle) = timer_handle.get_untracked() {
+                                timer_handle.clear();
+                            }
                             navigate("/session/timer-input", Default::default());
                         }>{NEXT_SESSION}</Button>
                     </div>

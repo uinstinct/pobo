@@ -15,6 +15,7 @@ pub fn Button(
     #[prop(optional, into)] size_lg: bool,
 
     #[prop(optional)] class: &'static str,
+    #[prop(optional)] disabled: bool,
 
     #[prop(optional, into)] on_click: Option<Callback<ev::MouseEvent>>,
 
@@ -45,6 +46,6 @@ pub fn Button(
     };
 
     view! {
-        <button class=classes on:click=on_click>{children()}</button>
+        <button disabled=disabled class=classes on:click=on_click>{children()}</button>
     }
 }
