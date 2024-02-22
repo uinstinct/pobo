@@ -1,5 +1,5 @@
 [package]
-name = "pobo"
+name = "pobo-backend"
 version = "0.0.0"
 description = "Productivity Booster"
 authors = ["uinstinct"]

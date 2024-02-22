@@ -4,8 +4,16 @@
     "source.organizeImports": "explicit",
     "source.fixAll": "explicit"
   },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "tailwindCSS.includeLanguages": {
+    "rust": "javascript"
+  },
   "tailwindCSS.experimental.classRegex": [
     ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
     ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
-  ]
+  ],
+  "rust-analyzer.linkedProjects": ["./Cargo.toml"],
+  "rust-analyzer.showUnlinkedFileNotification": false
 }
