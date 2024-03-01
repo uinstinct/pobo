@@ -34,7 +34,7 @@ pub fn SessionTimer() -> impl IntoView {
 
         if let Ok(timer_result) = timer_result {
             elapsed.set(timer_result.elapsed.unwrap());
-            timer_seconds.set_untracked(timer_result.timer_seconds.unwrap());
+            timer_seconds.set(timer_result.timer_seconds.unwrap());
 
             let interval_result = set_interval_with_handle(
                 move || {

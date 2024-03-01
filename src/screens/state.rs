@@ -5,6 +5,7 @@ use leptos::{leptos_dom::logging::console_log, *};
 #[derive(Clone, Copy)]
 enum ThemeEnum {
     Dark,
+    #[allow(dead_code)]
     Light,
 }
 

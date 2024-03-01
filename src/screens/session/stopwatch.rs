@@ -25,6 +25,9 @@ pub fn Stopwatch() -> impl IntoView {
     let elapsed = create_rw_signal(0);
     let timer_handle = create_rw_signal::<Option<IntervalHandle>>(None);
 
+    let invoke_stop_stopwatch =
+        create_action(|_: &()| async move { invoke::<_, ()>("stop_stopwatch", &()).await });
+
     let stopwatch_started_resource = create_resource(
         || (),
         |_| async move {
@@ -61,6 +64,12 @@ pub fn Stopwatch() -> impl IntoView {
         }
     };
 
+    on_cleanup(move || {
+        if let Some(timer_handle) = timer_handle.get_untracked() {
+            timer_handle.clear();
+        }
+    });
+
     view! {
         <Await
             future=fetch_stopwatch_data
@@ -71,6 +80,7 @@ pub fn Stopwatch() -> impl IntoView {
                     <Timer current_secs=elapsed.get() />
                     <div class="flex gap-2 m-5">
                         <Button variant_destructive=true on_click=move |_| {
+                            invoke_stop_stopwatch.dispatch(());
                             let navigate = use_navigate();
                             if let Some(timer_handle) = timer_handle.get_untracked() {
                                 timer_handle.clear();
