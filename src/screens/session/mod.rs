@@ -1,9 +1,11 @@
+use self::session_counter::SessionCounter;
 use futures::StreamExt;
 use leptos::{leptos_dom::logging::console_log, *};
 use leptos_router::{use_navigate, Outlet, Route};
 use serde::{Deserialize, Serialize};
 use tauri_sys::{event::listen, tauri::invoke};
 
+mod session_counter;
 mod stopwatch;
 mod timer;
 mod timer_input;
@@ -21,21 +23,16 @@ struct ResyncStopwatchResult {
 
 #[component(transparent)]
 pub fn SessionRoutes() -> impl IntoView {
-    // listen("stopwatch_started");
     let navigate = use_navigate();
 
     let resync_timer_resource = create_resource(
         || (),
         |_| async move {
             let invoke_result = invoke::<_, ResyncTimerResult>("resync_timer", &()).await;
-            if let Ok(invoke_result) = invoke_result {
-                invoke_result
-            } else {
-                ResyncTimerResult {
-                    elapsed: None,
-                    timer_seconds: None,
-                }
-            }
+            invoke_result.unwrap_or(ResyncTimerResult {
+                elapsed: None,
+                timer_seconds: None,
+            })
         },
     );
 
@@ -43,29 +40,23 @@ pub fn SessionRoutes() -> impl IntoView {
         || (),
         |_| async move {
             let invoke_result = invoke("resync_stopwatch", &()).await;
-            if let Ok(invoke_result) = invoke_result {
-                invoke_result
-            }
-            ResyncStopwatchResult { elapsed: None }
+            invoke_result.unwrap_or(ResyncStopwatchResult { elapsed: None })
         },
     );
 
-    let stopwatch_started_resource = create_resource(
-        || (),
-        |_| async move {
-            let event_stream = listen::<()>("stopwatch_started").await;
-            if event_stream.is_err() {
-                return false;
-            }
-            let mut event_stream = event_stream.unwrap();
-            let stopwatch_started_event = event_stream.next().await;
-            if let Some(stopwatch_started_event) = stopwatch_started_event {
-                console_log(format!("stopwatch started {:#?}", stopwatch_started_event).as_str());
-                return true;
-            }
-            false
-        },
-    );
+    spawn_local(async {
+        let event_stream = listen::<()>("stopwatch_started").await;
+        if event_stream.is_err() {
+            console_log("event stream produced error {:#?}");
+            return;
+        }
+        let mut event_stream = event_stream.unwrap();
+        while let Some(stopwatch_started_event) = event_stream.next().await {
+            console_log(format!("stopwatch started {:#?}", stopwatch_started_event).as_str());
+            let navigate = use_navigate();
+            navigate("/session/stopwatch", Default::default());
+        }
+    });
 
     create_effect(move |_| {
         if let Some(resync_timer_result) = resync_timer_resource.get() {
@@ -80,16 +71,11 @@ pub fn SessionRoutes() -> impl IntoView {
                 navigate("/session/stopwatch", Default::default());
             }
         }
-
-        if let Some(stopwatch_started_result) = stopwatch_started_resource.get() {
-            if stopwatch_started_result {
-                navigate("/session/stopwatch", Default::default());
-            }
-        }
     });
 
     view! {
-        <Route path=":id" view={|| view! {
+        <Route path=":id" view={move || view! {
+            <SessionCounter />
             <Outlet />
         }}>
             <Route path="timer-input" view=timer_input::TimerInput />

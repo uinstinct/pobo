@@ -3,7 +3,10 @@ use tokio::time::{interval as tokio_interval, Duration, Instant};
 
 use tauri::{api::notification::Notification, AppHandle, Manager};
 
-use crate::state::{StopwatchState, TimerState};
+use crate::{
+    state::{StopwatchState, TimerState},
+    store::SessionStore,
+};
 
 async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_duration: Duration) {
     let mut interval = tokio_interval(Duration::from_secs(1));
@@ -23,6 +26,8 @@ async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_d
         timer_state.set_timer_seconds(None),
     )
     .await;
+
+    increment_and_notify_session_counter(&app_handle);
 
     println!("Sending Notification (notifications are not visible during dev mode)");
     let _ = Notification::new(&app_handle.config().tauri.bundle.identifier)
@@ -53,11 +58,13 @@ pub async fn start_timer(
     .await;
 
     let timer_run_task = tauri::async_runtime::spawn(start_timer_task(
-        app_handle,
+        app_handle.clone(),
         start_instant,
         Duration::from_secs(timer_seconds),
     ));
     timer_state.set_run_task(Some(timer_run_task)).await;
+
+    SessionStore::set_timer_seconds(&app_handle, timer_seconds);
 
     Ok(())
 }
@@ -117,7 +124,7 @@ pub struct CurrentStopWatchState {
     pub elapsed: Option<u64>,
 }
 
-async fn notify_stopwatch_finished(app_handle: &AppHandle) {
+fn notify_stopwatch_finished(app_handle: &AppHandle) {
     app_handle.emit_all("stopwatch_finished", ()).unwrap();
 }
 
@@ -135,7 +142,7 @@ async fn start_stopwatch_task(app_handle: AppHandle, start_instant: Instant) {
     let stopwatch_state = app_handle.state::<StopwatchState>();
     stopwatch_state.set_start_instant(None).await;
 
-    notify_stopwatch_finished(&app_handle).await;
+    notify_stopwatch_finished(&app_handle);
     println!("stopwatch cooldown duration finished")
 }
 
@@ -183,7 +190,31 @@ pub async fn stop_stopwatch(
     println!("manually stopping the stopwatch");
 
     stopwatch_state.reset().await;
-    notify_stopwatch_finished(&app_handle).await;
+    notify_stopwatch_finished(&app_handle);
 
     Ok(())
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct ResyncSessionCounterResult {
+    pub counter: u64,
+}
+
+pub fn increment_and_notify_session_counter(app_handle: &AppHandle) {
+    let counter = SessionStore::get_session_counter(&app_handle).unwrap() + 1;
+    SessionStore::set_session_counter(&app_handle, counter);
+    app_handle
+        .emit_all(
+            "get_session_counter",
+            ResyncSessionCounterResult { counter },
+        )
+        .unwrap();
+}
+
+#[tauri::command]
+pub async fn resync_session_counter(
+    app_handle: AppHandle,
+) -> Result<ResyncSessionCounterResult, ()> {
+    let counter = SessionStore::get_session_counter(&app_handle).unwrap();
+    Ok(ResyncSessionCounterResult { counter })
 }

@@ -21,7 +21,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Router>
-            <main>
+            <main class="relative">
                 <Routes>
                     <Route path="/" view=Home/>
                     <SessionRoutes />
