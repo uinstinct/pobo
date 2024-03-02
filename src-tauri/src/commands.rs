@@ -119,6 +119,20 @@ pub async fn stop_timer(
     Ok(())
 }
 
+#[tauri::command]
+pub async fn restart_timer(
+    timer_state: tauri::State<'_, TimerState>,
+    app_handle: AppHandle,
+) -> Result<(), ()> {
+    let timer_seconds = SessionStore::get_timer_seconds(&app_handle);
+    println!(
+        "restarting stopwatch with seconds={:#?}",
+        timer_seconds.unwrap()
+    );
+    start_timer(timer_seconds.unwrap(), timer_state, app_handle.clone()).await?;
+    Ok(())
+}
+
 #[derive(Debug, serde::Serialize)]
 pub struct CurrentStopWatchState {
     pub elapsed: Option<u64>,

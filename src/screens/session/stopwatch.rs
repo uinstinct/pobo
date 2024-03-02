@@ -13,6 +13,7 @@ use crate::components::timer::Timer;
 use crate::components::ui::Button;
 
 const NEXT_SESSION: &str = "Next Session";
+const MODIFY_SESSION: &str = "Modify Session";
 const STOP_COOLDOWN: &str = "Stop Cooldown";
 
 #[derive(Serialize, Deserialize)]
@@ -27,6 +28,9 @@ pub fn Stopwatch() -> impl IntoView {
 
     let invoke_stop_stopwatch =
         create_action(|_: &()| async move { invoke::<_, ()>("stop_stopwatch", &()).await });
+
+    let invoke_restart_stopwatch =
+        create_action(|_: &()| async move { invoke::<_, ()>("restart_timer", &()).await });
 
     let stopwatch_started_resource = create_resource(
         || (),
@@ -82,18 +86,18 @@ pub fn Stopwatch() -> impl IntoView {
                         <Button variant_destructive=true on_click=move |_| {
                             invoke_stop_stopwatch.dispatch(());
                             let navigate = use_navigate();
-                            if let Some(timer_handle) = timer_handle.get_untracked() {
-                                timer_handle.clear();
-                            }
                             navigate("/", Default::default());
                         }>{STOP_COOLDOWN}</Button>
-                        <Button disabled=stopwatch_started_resource.loading().get() on_click=move |_| {
+                        <Button on_click=move |_| {
                             let navigate = use_navigate();
-                            if let Some(timer_handle) = timer_handle.get_untracked() {
-                                timer_handle.clear();
-                            }
                             navigate("/session/timer-input", Default::default());
-                        }>{NEXT_SESSION}</Button>
+                        }>{MODIFY_SESSION}</Button>
+                        <Button on_click=move |_| {
+                            invoke_restart_stopwatch.dispatch(());
+                            let navigate = use_navigate();
+                            navigate("/session/timer", Default::default());
+                        }
+                        disabled=stopwatch_started_resource.loading().get()>{NEXT_SESSION}</Button>
                     </div>
                 </div>
             </div>

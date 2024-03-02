@@ -25,6 +25,7 @@ fn main() {
             commands::start_timer,
             commands::resync_timer,
             commands::stop_timer,
+            commands::restart_timer,
             commands::resync_stopwatch,
             commands::stop_stopwatch,
             commands::resync_session_counter
