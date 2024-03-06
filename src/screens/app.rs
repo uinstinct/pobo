@@ -1,5 +1,5 @@
 use crate::screens::state::ThemeState;
-use crate::screens::{session::SessionRoutes, Home};
+use crate::screens::{session::SessionRoutes, settings::Settings, Home};
 use leptos::*;
 use leptos_router::{Route, Router, Routes};
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,8 @@ pub fn App() -> impl IntoView {
         <Router>
             <main class="relative">
                 <Routes>
-                    <Route path="/" view=Home/>
+                    <Route path="/" view=Home />
+                    <Route path="/settings" view=Settings />
                     <SessionRoutes />
                 </Routes>
             </main>

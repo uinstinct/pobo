@@ -5,7 +5,7 @@ use tauri::{api::notification::Notification, AppHandle, Manager};
 
 use crate::{
     state::{StopwatchState, TimerState},
-    store::SessionStore,
+    store::{SessionStore, SettingsStore},
 };
 
 async fn start_timer_task(app_handle: AppHandle, start_instant: Instant, timer_duration: Duration) {
@@ -231,4 +231,26 @@ pub async fn resync_session_counter(
 ) -> Result<ResyncSessionCounterResult, ()> {
     let counter = SessionStore::get_session_counter(&app_handle).unwrap();
     Ok(ResyncSessionCounterResult { counter })
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct StoredSettings {
+    stopwatch_seconds: u64,
+}
+
+#[tauri::command]
+pub async fn resync_settings(app_handle: AppHandle) -> Result<StoredSettings, ()> {
+    Ok(StoredSettings {
+        stopwatch_seconds: SettingsStore::get_stopwatch_seconds(&app_handle),
+    })
+}
+
+#[tauri::command]
+pub async fn set_settings(
+    app_handle: AppHandle,
+    stored_settings: StoredSettings,
+) -> Result<(), ()> {
+    println!("the settings were {:#?}", stored_settings);
+    SettingsStore::set_stopwatch_seconds(&app_handle, stored_settings.stopwatch_seconds);
+    Ok(())
 }

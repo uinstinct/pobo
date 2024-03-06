@@ -5,6 +5,8 @@ use serde_json::Value;
 use tauri::{AppHandle, Manager, Wry};
 use tauri_plugin_store::{with_store, StoreBuilder, StoreCollection};
 
+use crate::helpers::check_timestamp_and_get_session_counter;
+
 pub trait PoboStore {
     fn get_path() -> PathBuf;
 
@@ -45,6 +47,8 @@ pub trait PoboStore {
         )
         .unwrap()
     }
+
+    fn load_on_setup(app_handle: &AppHandle);
 }
 
 pub struct SessionStore {}
@@ -55,15 +59,7 @@ impl SessionStore {
     const TIMER_SECONDS_KEY: &'static str = "CurrentTimerSeconds";
     const SESSION_COUNTER_KEY: &'static str = "SessionCounter";
     const TIMESTAMP_KEY: &'static str = "TimeStamp";
-}
 
-impl PoboStore for SessionStore {
-    fn get_path() -> PathBuf {
-        SessionStore::SESSION_STORE_PATH.parse().unwrap()
-    }
-}
-
-impl SessionStore {
     pub fn set_timer_seconds(app_handle: &AppHandle, timer_seconds: u64) {
         SessionStore::set(&app_handle, SessionStore::TIMER_SECONDS_KEY, timer_seconds);
     }
@@ -93,5 +89,53 @@ impl SessionStore {
     pub fn get_timestamp(app_handle: &AppHandle) -> Option<chrono::DateTime<chrono::Local>> {
         SessionStore::get(&app_handle, SessionStore::TIMESTAMP_KEY)
             .and_then(|value| serde_json::from_value(value).ok())
+    }
+}
+
+impl PoboStore for SessionStore {
+    fn get_path() -> PathBuf {
+        SessionStore::SESSION_STORE_PATH.parse().unwrap()
+    }
+
+    fn load_on_setup(app_handle: &AppHandle) {
+        SessionStore::load(app_handle.clone());
+        SessionStore::set_session_counter(
+            &app_handle,
+            check_timestamp_and_get_session_counter(&app_handle),
+        );
+        SessionStore::set_timestamp(&app_handle);
+    }
+}
+
+pub struct SettingsStore {}
+
+impl SettingsStore {
+    const SETTINGS_STORE_PATH: &'static str = "./settings-store.json";
+
+    const STOPWATCH_SECONDS: &'static str = "StopwatchSeconds";
+    const DEFAULT_STOPWATCH_SECONDS: u64 = 10;
+
+    pub fn get_stopwatch_seconds(app_handle: &AppHandle) -> u64 {
+        SettingsStore::get(&app_handle, SettingsStore::STOPWATCH_SECONDS)
+            .and_then(|value| serde_json::from_value(value).ok())
+            .unwrap_or(SettingsStore::DEFAULT_STOPWATCH_SECONDS)
+    }
+
+    pub fn set_stopwatch_seconds(app_handle: &AppHandle, stopwatch_seconds: u64) {
+        SettingsStore::set(
+            &app_handle,
+            SettingsStore::STOPWATCH_SECONDS,
+            stopwatch_seconds,
+        );
+    }
+}
+
+impl PoboStore for SettingsStore {
+    fn get_path() -> PathBuf {
+        SettingsStore::SETTINGS_STORE_PATH.parse().unwrap()
+    }
+
+    fn load_on_setup(app_handle: &AppHandle) {
+        SettingsStore::load(app_handle.clone());
     }
 }

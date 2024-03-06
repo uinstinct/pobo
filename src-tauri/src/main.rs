@@ -3,10 +3,7 @@
 
 use tauri::api::path::app_data_dir;
 
-use crate::{
-    helpers::check_timestamp_and_get_session_counter,
-    store::{PoboStore, SessionStore},
-};
+use crate::store::{PoboStore, SessionStore, SettingsStore};
 
 mod commands;
 mod helpers;
@@ -28,7 +25,9 @@ fn main() {
             commands::restart_timer,
             commands::resync_stopwatch,
             commands::stop_stopwatch,
-            commands::resync_session_counter
+            commands::resync_session_counter,
+            commands::resync_settings,
+            commands::set_settings
         ])
         .setup(|app| {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -37,12 +36,9 @@ fn main() {
                 "the local dir was data_dir -> {:#?} ",
                 app_data_dir(&app.config())
             );
-            SessionStore::load(app.handle());
-            SessionStore::set_session_counter(
-                &app.handle(),
-                check_timestamp_and_get_session_counter(&app.handle()),
-            );
-            SessionStore::set_timestamp(&app.handle());
+
+            SessionStore::load_on_setup(&app.handle());
+            SettingsStore::load_on_setup(&app.handle());
 
             Ok(())
         })

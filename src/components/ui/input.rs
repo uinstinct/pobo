@@ -4,7 +4,7 @@ use crate::utils::build_classes;
 
 /// the value is automatically set on the signal and always received from the signal
 ///
-/// whenever `on_input` is provided, the signal `state` should be set in all cases - otherwise the typed input and the signal's value would not match (i.e. signal should always **control** the value inside input)
+/// whenever `on_input` is provided, the signal `state` should be explicitly set in all cases - otherwise the typed input and the signal's value would not match (i.e. signal should always **control** the value inside input)
 ///
 /// Controlled Input Component
 #[component]
