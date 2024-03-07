@@ -11,6 +11,7 @@ const SETTINGS: &'static str = "Settings";
 const COOLDOWN_PERIOD: &'static str = "Cooldown Period";
 const COOLDOWN_PERIOD_DESCRIPTION: &'static str = "Sends a notification when cooldown finishes";
 const SAVE_SETTINGS: &'static str = "Save";
+const SECONDS: &'static str = "Seconds";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoredSettingsResult {
@@ -21,6 +22,23 @@ pub struct StoredSettingsResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StoredSettingsAction {
     storedSettings: StoredSettingsResult,
+}
+
+#[component]
+fn FormField(
+    label: String,
+    #[prop(default="".to_string())] description: String,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <div class="rounded-lg border mx-2 p-4 grid grid-cols-1 gap-2 sm:grid-cols-4">
+            <div class="col-span-3 flex flex-col items-center space-y-0.5 sm:items-start">
+                <label class="text-base text-center sm:text-start inline-block">{label}</label>
+                <p class="text-sm text-muted-foreground text-center sm:text-start">{description}</p>
+            </div>
+            {children()}
+        </div>
+    }
 }
 
 #[component]
@@ -42,7 +60,7 @@ pub fn Settings() -> impl IntoView {
             let invoke_result =
                 invoke::<StoredSettingsAction, ()>("set_settings", &stored_settings).await;
             console_log("calling store_settings");
-            if let Ok(_) = invoke_result {
+            if invoke_result.is_ok() {
                 console_log("saved!");
             } else {
                 console_log(invoke_result.unwrap_err().to_string().as_str());
@@ -63,21 +81,20 @@ pub fn Settings() -> impl IntoView {
             future=fetch_settings
             let:_data
         >
-            <a class="absolute top-2 right-2" href="/">
-                <img src="/public/icons/home.svg" className="h-6 w-h-6" />
+            <a class="absolute top-2 left-2" href="/">
+                <img src="/public/icons/home.svg" className="h-6 w-6" />
             </a>
-            <Button on_click=on_settings_save>{SAVE_SETTINGS}</Button>
+            <Button class="fixed bottom-4 right-4" on_click=on_settings_save>{SAVE_SETTINGS}</Button>
 
             <div class="mx-auto my-4 grid gap-2 sm:w-[75vw] xl:w-[50vw]">
-                <h1 class="mb-2 text-center uppercase inline-block">{SETTINGS}</h1>
+                <h1 class="mb-2 text-xl text-center uppercase inline-block">{SETTINGS}</h1>
 
-                <div class="flex flex-wrap items-center justify-center gap-2 rounded-lg border p-4 sm:justify-between mx-4">
-                    <div class="w-full flex flex-col items-center space-y-0.5 sm:w-3/4 sm:items-start">
-                        <label class="text-base inline-block">{COOLDOWN_PERIOD}</label>
-                        <p class="text-sm text-muted-foreground text-center sm:text-start">{COOLDOWN_PERIOD_DESCRIPTION}</p>
+                <FormField label={COOLDOWN_PERIOD.to_string()} description={COOLDOWN_PERIOD_DESCRIPTION.to_string()}>
+                    <div class="flex rounded-lg shadow-sm">
+                        <Input class="border-e-0" state=stopwatch_seconds />
+                        <label class="px-2 text-sm text-muted-foreground h-10 inline-flex items-center rounded-e-md border border-s-0">{SECONDS}</label>
                     </div>
-                    <Input state=stopwatch_seconds />
-                </div>
+                </FormField>
             </div>
         </Await>
     }
