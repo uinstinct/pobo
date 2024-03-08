@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use tauri_sys::tauri::invoke;
 
 use crate::{
-    components::ui::{Button, Input},
+    components::ui::{Button, NumberInput},
     utils::log_error,
 };
 
@@ -43,12 +43,12 @@ fn FormField(
 
 #[component]
 pub fn Settings() -> impl IntoView {
-    let stopwatch_seconds = create_rw_signal(String::from("0"));
+    let stopwatch_seconds = create_rw_signal::<i64>(0);
 
     let fetch_settings = move || async move {
         let invoke_result = invoke::<_, StoredSettingsResult>("resync_settings", &()).await;
         if let Ok(invoke_result) = invoke_result {
-            stopwatch_seconds.set(invoke_result.stopwatch_seconds.to_string());
+            stopwatch_seconds.set(invoke_result.stopwatch_seconds as i64);
         } else {
             log_error("Settings should have been set");
         }
@@ -71,7 +71,7 @@ pub fn Settings() -> impl IntoView {
     let on_settings_save = move |_| {
         save_settings_action.dispatch(StoredSettingsAction {
             storedSettings: StoredSettingsResult {
-                stopwatch_seconds: stopwatch_seconds.get().parse::<u64>().unwrap(),
+                stopwatch_seconds: stopwatch_seconds.get_untracked() as u64,
             },
         })
     };
@@ -91,7 +91,7 @@ pub fn Settings() -> impl IntoView {
 
                 <FormField label={COOLDOWN_PERIOD.to_string()} description={COOLDOWN_PERIOD_DESCRIPTION.to_string()}>
                     <div class="flex rounded-lg shadow-sm">
-                        <Input class="border-e-0" state=stopwatch_seconds />
+                        <NumberInput class="border-e-0" state=stopwatch_seconds />
                         <label class="px-2 text-sm text-muted-foreground h-10 inline-flex items-center rounded-e-md border border-s-0">{SECONDS}</label>
                     </div>
                 </FormField>

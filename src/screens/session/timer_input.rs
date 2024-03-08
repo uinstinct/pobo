@@ -4,15 +4,11 @@ use serde::{Deserialize, Serialize};
 use tauri_sys::tauri::invoke;
 
 use crate::{
-    components::ui::{Button, Input},
+    components::ui::{Button, NumberInput},
     utils::log_error,
 };
 
 const START_SESSION: &str = "Start Session";
-
-fn parse_as_number(value: String) -> u32 {
-    value.parse::<u32>().unwrap_or(0)
-}
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
@@ -22,45 +18,39 @@ struct StartTimerInput {
 
 #[component]
 fn HoursMinsSecsInput(#[prop(into)] on_total_seconds_change: Callback<u32>) -> impl IntoView {
-    let hours = create_rw_signal("".to_string());
-    let minutes = create_rw_signal("".to_string());
-    let seconds = create_rw_signal("".to_string());
+    let hours = create_rw_signal::<i64>(0);
+    let minutes = create_rw_signal::<i64>(0);
+    let seconds = create_rw_signal::<i64>(0);
 
-    let on_time_change = move |time_signal: RwSignal<String>| {
-        move |input: String| {
-            let input = input.trim();
-            if input.is_empty() {
-                time_signal.set("".to_string());
-            } else if let Ok(input) = input.parse::<u8>() {
-                if input < 60 {
-                    time_signal.set(input.to_string());
-                } else {
-                    time_signal.set(time_signal.get());
-                }
+    let on_time_change = move |time_signal: RwSignal<i64>| {
+        move |input: i64| {
+            if input < 60 {
+                time_signal.set(input);
             } else {
                 time_signal.set(time_signal.get());
             }
-            let total_seconds = (parse_as_number(hours.get()) * 60)
-                + (parse_as_number(minutes.get()) * 60)
-                + parse_as_number(seconds.get());
+            let total_seconds = (hours.get() * 60) + (minutes.get() * 60) + seconds.get();
 
-            on_total_seconds_change.call(total_seconds);
+            on_total_seconds_change.call(total_seconds as u32);
         }
     };
 
     view! {
         <div class="mt-6 grid grid-cols-3 gap-2">
-            <Input
+            <NumberInput
+                clear_on_mount=true
                 placeholder="Hours"
                 state=hours
                 on_input=move |value| on_time_change(hours)(value)
             />
-            <Input
+            <NumberInput
+                clear_on_mount=true
                 placeholder="Minutes"
                 state=minutes
                 on_input=move |value| on_time_change(minutes)(value)
             />
-            <Input
+            <NumberInput
+                clear_on_mount=true
                 placeholder="Seconds"
                 state=seconds
                 on_input=move |value| on_time_change(seconds)(value)
