@@ -8,7 +8,8 @@ use crate::{
     utils::log_error,
 };
 
-const START_SESSION: &str = "Start Session";
+const START_SESSION: &'static str = "Start Session";
+const CANCEL: &'static str = "Cancel";
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
@@ -90,8 +91,11 @@ pub fn TimerInput() -> impl IntoView {
 
     view! {
         <div class="h-screen flex flex-col justify-center items-center">
-           <Button on_click=on_start_session_click>{START_SESSION}</Button>
-           <HoursMinsSecsInput on_total_seconds_change=move |secs| total_seconds.set(secs) />
+            <div class="flex gap-2">
+                <Button class="w-32" on_click=on_start_session_click>{START_SESSION}</Button>
+                <a href="/"><Button class="w-32" variant_destructive=true>{CANCEL}</Button></a>
+            </div>
+            <HoursMinsSecsInput on_total_seconds_change=move |secs| total_seconds.set(secs) />
         </div>
     }
 }

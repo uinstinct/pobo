@@ -4,6 +4,7 @@ use tokio::time::{interval as tokio_interval, Duration, Instant};
 use tauri::{api::notification::Notification, AppHandle, Manager};
 
 use crate::{
+    helpers,
     state::{StopwatchState, TimerState},
     store::{SessionStore, SettingsStore},
 };
@@ -143,12 +144,15 @@ fn notify_stopwatch_finished(app_handle: &AppHandle) {
 }
 
 async fn start_stopwatch_task(app_handle: AppHandle, start_instant: Instant) {
+    helpers::bring_window_to_focus(&app_handle);
     let mut interval = tokio_interval(Duration::from_secs(1));
 
     loop {
         interval.tick().await;
 
-        if start_instant.elapsed() > Duration::from_secs(1 * 10) {
+        if start_instant.elapsed()
+            > Duration::from_secs(SettingsStore::get_stopwatch_seconds(&app_handle))
+        {
             break;
         }
     }
@@ -250,7 +254,7 @@ pub async fn set_settings(
     app_handle: AppHandle,
     stored_settings: StoredSettings,
 ) -> Result<(), ()> {
-    println!("the settings were {:#?}", stored_settings);
+    println!("setting the settings -> {:#?}", stored_settings);
     SettingsStore::set_stopwatch_seconds(&app_handle, stored_settings.stopwatch_seconds);
     Ok(())
 }
