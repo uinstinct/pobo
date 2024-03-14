@@ -81,8 +81,8 @@ pub fn Settings() -> impl IntoView {
             future=fetch_settings
             let:_data
         >
-            <a class="absolute top-2 left-2" href="/">
-                <img src="/public/icons/home.svg" className="h-6 w-6" />
+            <a class="absolute top-2 left-2 h-6 w-6" href="/">
+                <img src="/public/icons/home.svg" />
             </a>
             <Button class="fixed bottom-4 right-4" on_click=on_settings_save>{SAVE_SETTINGS}</Button>
 
