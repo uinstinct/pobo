@@ -1,6 +1,5 @@
 use leptos::*;
-
-use crate::utils::build_classes;
+use tailwind_fuse::tw_merge;
 
 /// the value is automatically set on the signal and always received from the signal
 ///
@@ -16,10 +15,10 @@ pub fn Input(
     #[prop(default = "")] placeholder: &'static str,
     #[prop(optional, into)] on_input: Option<Callback<String>>,
 ) -> impl IntoView {
-    let classes = build_classes(vec![
+    let classes = tw_merge!(
         Some("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"),
         Some(class)
-    ]);
+    );
 
     view! {
         <input

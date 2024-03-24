@@ -1,6 +1,5 @@
 use leptos::*;
-
-use crate::utils::build_classes;
+use tailwind_fuse::tw_merge;
 
 /// the value is automatically set on the signal and always received from the signal
 ///
@@ -15,13 +14,13 @@ pub fn Switch(
     #[prop(optional)] disabled: bool,
     #[prop(optional, into)] on_input: Option<Callback<bool>>,
 ) -> impl IntoView {
-    let classes = build_classes(vec![
+    let classes = tw_merge!(
         Some("peer relative h-6 w-11 cursor-pointer rounded-full border-2 border-transparent transition-colors bg-input after:absolute"),
         Some("after:start-[2px] after:end-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-transparent after:bg-background after:transition-transform shadow-lg ring-0 after:content-['']"),
         Some("peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-ring peer-focus:ring-offset-background"),
         Some("peer-disabled:pointer-events-none peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"),
         Some(class)
-    ]);
+    );
 
     let on_check = move || {
         let value = !state.get_untracked();

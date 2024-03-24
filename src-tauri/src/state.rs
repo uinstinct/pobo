@@ -17,8 +17,7 @@ impl TimerState {
         Self {
             start_instant: Mutex::new(None),
             timer_seconds: Mutex::new(None),
-            /// used to cancel the timer when a new timer starts or the old timer is cancelled
-            run_task: Mutex::new(None),
+            run_task: Mutex::new(None), // used to cancel the timer when a new timer starts or the old timer is cancelled
         }
     }
 

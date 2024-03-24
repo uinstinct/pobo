@@ -1,5 +1,5 @@
-use crate::utils::build_classes;
 use leptos::*;
+use tailwind_fuse::tw_merge;
 
 #[component]
 pub fn Button(
@@ -21,7 +21,7 @@ pub fn Button(
 
     children: Children,
 ) -> impl IntoView {
-    let classes = build_classes(vec![
+    let classes = tw_merge!(
         Some("inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"),
 
         variant_default.then_some("bg-primary text-primary-foreground hover:bg-primary/90"),
@@ -36,7 +36,7 @@ pub fn Button(
         size_lg.then_some("h-11 rounded-md px-8"),
 
         Some(class)
-    ]);
+    );
 
     let on_click = move |event| {
         let Some(callback) = on_click.as_ref() else {
