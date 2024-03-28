@@ -1,7 +1,13 @@
 use leptos::*;
-use tailwind_fuse::tw_merge;
+use tailwind_fuse::*;
 
 use crate::utils::convert_string_to_number;
+
+#[derive(TwClass)]
+#[tw(
+    class = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+)]
+struct NumberInputVariant {}
 
 #[component]
 pub fn NumberInput(
@@ -20,11 +26,6 @@ pub fn NumberInput(
 ) -> impl IntoView {
     let has_typed = create_rw_signal(!clear_on_mount);
 
-    let classes = tw_merge!(
-        Some("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"),
-        Some(class)
-    );
-
     let handle_input = move |input_value: String| {
         let number_input = convert_string_to_number::<i64>(input_value);
         if let Some(on_input) = on_input.as_ref() {
@@ -37,6 +38,8 @@ pub fn NumberInput(
             }
         }
     };
+
+    let classes = NumberInputVariant::variant().with_class(class);
 
     view! {
         <input
